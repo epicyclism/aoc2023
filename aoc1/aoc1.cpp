@@ -25,57 +25,35 @@ int pt1(auto const& in)
 		});
 }
 
+template<typename I> int to_digit(I b)
+{
+	if (::isdigit(*b))
+		return *b - '0';
+	if (*b == 'o')
+		return 1;
+	if( *b == 't')
+		return *(b + 1) == 'w' ? 2 : 3;
+	if( *b == 'f')
+		return *(b + 1) == 'o' ? 4 : 5;
+	if( *b == 's')
+		return *(b + 1) == 'i' ? 6 : 7;
+	if (*b == 'e')
+		return 8;
+	if(*b == 'n')
+		return 9;
+	return -10000000;
+}
+
 int pt2(auto const& in)
 {
-	auto to_digit = [](auto const& v)
-		{
-			switch (v[0])
-			{
-			case '0':
-				return 0;
-			case '1':
-				return 1;
-			case '2':
-				return 2;
-			case '3':
-				return 3;
-			case '4':
-				return 4;
-			case '5':
-				return 5;
-			case '6':
-				return 6;
-			case '7':
-				return 7;
-			case '8':
-				return 8;
-			case '9':
-				return 9;
-			case 'o':
-				return 1;
-			case 't':
-				return v[1] == 'w' ? 2 : 3;
-			case 'f':
-				return v[1] == 'o' ? 4 : 5;
-			case 's':
-				return v[1] == 'i' ? 6 : 7;
-			case 'e':
-				return 8;
-			case 'n':
-				return 9;
-			default :
-				return 0;
-			}
-		};
-
 	return std::accumulate(in.begin(), in.end(), 0, [&](auto l, auto& r)
 		{
-			auto [m, ls] = ctre::search<R"((0|1|2|3|4|5|6|7|8|9|one|two|three|four|five|six|seven|eight|nine))">(r.begin(), r.end());
-			auto [m2, rs] = ctre::search<R"((enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|9|8|7|6|5|4|3|2|1|0))">(r.rbegin(), r.rend());
-			auto ld = to_digit(ls.to_view());
-			auto rsr{ rs.to_string() };
-			std::reverse(rsr.begin(), rsr.end());
-			auto rd = to_digit(rsr);
+			auto [m, ls] = ctre::search<R"((\d|one|two|three|four|five|six|seven|eight|nine))">(r.begin(), r.end());
+			auto [m2, rs] = ctre::search<R"((enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|\d))">(r.rbegin(), r.rend());
+			auto vl{ ls.view() };
+			auto ld = to_digit( vl.begin());
+			auto vr{ rs.to_string() };
+			auto rd = to_digit(vr.rbegin());
 			return ld * 10 + rd + l;
 		});
 }
