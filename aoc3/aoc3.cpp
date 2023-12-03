@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 
+#define MDSPAN_USE_PAREN_OPERATOR 1
 #include <experimental/mdspan>
 namespace stdex = std::experimental;
 
