@@ -1,11 +1,16 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "ctre_inc.h"
 
 using uint_t = unsigned;
+
+struct span
+{
+	uint_t f_;
+	uint_t t_;
+};
 
 struct range
 {
@@ -43,78 +48,73 @@ auto get_input()
 	}
 	if (!tmp.empty())
 		txs.txs_.emplace_back(std::move(tmp));
-	for (auto& mp : txs.txs_)
-		std::ranges::sort(mp, [](auto& l, auto& r) { return l.f_ < r.f_; });
 
 	return txs;
 }
 
-uint_t apply_map(uint_t val, std::vector<range>const& map)
+std::vector<span> apply_tx(std::vector<span> in, range const& tx, std::vector<span>& out)
 {
-	for (auto& rng : map)
-		if (val >= rng.f_ && val < rng.f_ + rng.sz_)
-			return rng.t_ + (val - rng.f_);
+	std::vector<span> unhandled;
+	for (auto& s : in)
+	{
+		if (tx.f_ >= s.t_ || (tx.f_ + tx.sz_) <= s.f_)
+			unhandled.emplace_back(s);
+		else
+		{
+			if (s.f_ < tx.f_)
+			{
+				unhandled.emplace_back(s.f_, tx.f_);
+				s.f_ = tx.f_;
+			}
+			if (s.t_ > tx.f_ + tx.sz_)
+			{
+				unhandled.emplace_back(tx.f_ + tx.sz_, s.t_);
+				s.t_ = tx.f_ + tx.sz_;
+			}
+			out.emplace_back(tx.t_ + s.f_ - tx.f_, tx.t_ + s.t_ - tx.f_);
+		}
+	}
+	return { unhandled };
+}
 
-	return val;
+uint_t min_seed_location(auto start, auto const& in)
+{
+	std::vector<span> txd;
+	for (auto& map : in.txs_)
+	{
+		txd.clear();
+		for (auto& tx : map)
+			start = apply_tx(start, tx, txd);
+		start.insert(start.end(), txd.begin(), txd.end());
+	}
+	uint_t min{ -1U };
+	for (auto& e : start)
+	{
+		if (e.f_ < min)
+			min = e.f_;
+	}
+	return min;
 }
 
 uint_t pt1(auto const& in)
 {
-	uint_t min{ -1U };
+	std::vector<span> start;
 	for (auto sd : in.seeds_)
-	{
-		auto val{ sd };
-		for (auto const& mp : in.txs_)
-			val = apply_map(val , mp);
-		if (val < min)
-			min = val;
-	}
-	return min;
+		start.emplace_back(sd, sd + 1);
+	return min_seed_location(start, in);
 }
 
 uint_t pt2(auto const& in)
 {
-	uint_t min{ -1U };
-	uint_t min_sd;
+	std::vector<span> start;
 	for (uint_t ns{ 0 }; ns != in.seeds_.size(); ns += 2)
-	{
-		std::cout << "from " << in.seeds_[ns] << " to " << in.seeds_[ns] + in.seeds_[ns + 1];
-		for (uint_t sd{ in.seeds_[ns] }; sd < in.seeds_[ns] + in.seeds_[ns + 1]; sd += 1024)
-		{
-			auto val{ sd };
-			for (auto const& mp : in.txs_)
-				val = apply_map(val, mp);
-			if (val < min)
-			{
-				min = val;
-				min_sd = sd;
-			}
-		}
-		std::cout << " (" << min << ")\n";
-	}
-	std::cout << "scanning seeds " << min_sd - 1024 << " to " << min_sd + 1024 << "\n";
-	for (uint_t sd{ min_sd - 1024 }; sd < min_sd + 1024; ++sd)
-	{
-		auto val{ sd };
-		for (auto const& mp : in.txs_)
-			val = apply_map(val, mp);
-		if (val < min)
-			min = val;
-	}
-	return min;
+		start.emplace_back(in.seeds_[ns], in.seeds_[ns] + in.seeds_[ns + 1]);
+	return min_seed_location(start, in);
 }
 
 int main()
 {
 	auto in{ get_input() };
-#if 0
-	for (auto s : in.seeds_)
-		std::cout << s << " ";
-	std::cout << "\n";
-	std::cout << in.txs_.size() << " maps\n";
-	for (auto& m : in.txs_.back())
-		std::cout << m.f_ << " " << m.t_ << " " << m.sz_ << "\n";
-#endif
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";
 }
