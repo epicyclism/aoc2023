@@ -60,7 +60,7 @@ uint_t apply_map(uint_t val, std::vector<range>const& map)
 
 uint_t pt1(auto const& in)
 {
-	uint_t min{ -1UL };
+	uint_t min{ -1U };
 	for (auto sd : in.seeds_)
 	{
 		auto val{ sd };
@@ -74,10 +74,10 @@ uint_t pt1(auto const& in)
 
 uint_t pt2(auto const& in)
 {
-	uint_t min{ -1UL };
+	uint_t min{ -1U };
 	for (uint_t ns{ 0 }; ns != in.seeds_.size(); ns += 2)
 	{
-		std::cout << "from " << in.seeds_[ns] << " to " << in.seeds_[ns] + in.seeds_[ns + 1] << "\n";
+		std::cout << "from " << in.seeds_[ns] << " to " << in.seeds_[ns] + in.seeds_[ns + 1];
 		for (uint_t sd{ in.seeds_[ns] }; sd < in.seeds_[ns] + in.seeds_[ns + 1]; ++sd)
 		{
 			auto val{ sd };
@@ -86,6 +86,7 @@ uint_t pt2(auto const& in)
 			if (val < min)
 				min = val;
 		}
+		std::cout << " (" << min << ")\n";
 	}
 	return min;
 }
