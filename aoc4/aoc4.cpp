@@ -29,11 +29,20 @@ auto get_input()
 			else
 				win.push_back(sv_to_t<int>(m.get<1>()));
 		}
+#if 1
 		std::ranges::sort(win);
 		std::ranges::sort(have);
 		tv.clear();
 		std::ranges::set_intersection(win, have, std::back_inserter(tv));
 		v.emplace_back(static_cast<int>(tv.size()));
+#else
+		int wins{0};
+		for(auto w : win)
+			for(auto g : have)
+				if( w == g)
+					++wins;
+		v.push_back(wins);
+#endif
 	}
 	return v;
 }
@@ -52,10 +61,10 @@ int pt1(auto const& in)
 auto pt2(auto const& in)
 {
 	std::vector<unsigned> cnts(in.size(), 1);
-	for (int c{ 0 }; c < in.size(); ++c)
+	for (int card{ 0 }; card < in.size(); ++card)
 	{
-		for (int b{ c + 1 }; b < c + in[c] + 1; ++b)
-			cnts[b] += cnts[c];
+		for (int b{ card + 1 }; b < card + 1 + in[card]; ++b)
+			cnts[b] += cnts[card];
 	}
 	return std::accumulate(cnts.begin(), cnts.end(), 0);
 }
