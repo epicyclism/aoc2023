@@ -75,18 +75,31 @@ uint_t pt1(auto const& in)
 uint_t pt2(auto const& in)
 {
 	uint_t min{ -1U };
+	uint_t min_sd;
 	for (uint_t ns{ 0 }; ns != in.seeds_.size(); ns += 2)
 	{
 		std::cout << "from " << in.seeds_[ns] << " to " << in.seeds_[ns] + in.seeds_[ns + 1];
-		for (uint_t sd{ in.seeds_[ns] }; sd < in.seeds_[ns] + in.seeds_[ns + 1]; ++sd)
+		for (uint_t sd{ in.seeds_[ns] }; sd < in.seeds_[ns] + in.seeds_[ns + 1]; sd += 1024)
 		{
 			auto val{ sd };
 			for (auto const& mp : in.txs_)
 				val = apply_map(val, mp);
 			if (val < min)
+			{
 				min = val;
+				min_sd = sd;
+			}
 		}
 		std::cout << " (" << min << ")\n";
+	}
+	std::cout << "scanning seeds " << min_sd - 1024 << " to " << min_sd + 1024 << "\n";
+	for (uint_t sd{ min_sd - 1024 }; sd < min_sd + 1024; ++sd)
+	{
+		auto val{ sd };
+		for (auto const& mp : in.txs_)
+			val = apply_map(val, mp);
+		if (val < min)
+			min = val;
 	}
 	return min;
 }
