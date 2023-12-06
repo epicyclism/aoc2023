@@ -37,7 +37,7 @@ auto get_input()
 	{
 		if (auto [m, t, f, s] = ctre::match<"(\\d+) (\\d+) (\\d+)">(ln); m)
 		{
-			tmp.emplace_back(f.to_number<uint_t>(), t.to_number<uint_t>(), s.to_number<uint_t>());
+			tmp.push_back({f.to_number<uint_t>(), t.to_number<uint_t>(), s.to_number<uint_t>()});
 		}
 		else
 		{
@@ -63,15 +63,15 @@ std::vector<span> apply_tx(std::vector<span> in, range const& tx, std::vector<sp
 		{
 			if (s.f_ < tx.f_)
 			{
-				unhandled.emplace_back(s.f_, tx.f_);
+				unhandled.push_back({s.f_, tx.f_});
 				s.f_ = tx.f_;
 			}
 			if (s.t_ > tx.f_ + tx.sz_)
 			{
-				unhandled.emplace_back(tx.f_ + tx.sz_, s.t_);
+				unhandled.push_back({tx.f_ + tx.sz_, s.t_});
 				s.t_ = tx.f_ + tx.sz_;
 			}
-			out.emplace_back(tx.t_ + s.f_ - tx.f_, tx.t_ + s.t_ - tx.f_);
+			out.push_back({tx.t_ + s.f_ - tx.f_, tx.t_ + s.t_ - tx.f_});
 		}
 	}
 	return { unhandled };
@@ -100,7 +100,7 @@ uint_t pt1(auto const& in)
 {
 	std::vector<span> start;
 	for (auto sd : in.seeds_)
-		start.emplace_back(sd, sd + 1);
+		start.push_back({sd, sd + 1});
 	return min_seed_location(start, in);
 }
 
@@ -108,7 +108,7 @@ uint_t pt2(auto const& in)
 {
 	std::vector<span> start;
 	for (uint_t ns{ 0 }; ns != in.seeds_.size(); ns += 2)
-		start.emplace_back(in.seeds_[ns], in.seeds_[ns] + in.seeds_[ns + 1]);
+		start.push_back({in.seeds_[ns], in.seeds_[ns] + in.seeds_[ns + 1]});
 	return min_seed_location(start, in);
 }
 

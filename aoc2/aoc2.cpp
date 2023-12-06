@@ -22,7 +22,7 @@ auto get_input()
 		auto start = ln.find(": ");
 		ln.erase(0, start + 2);
 		rgb srgb {};
-		for(auto m :  ctre::range<R"((\d+) (red|green|blue)|(;))">(ln))
+		for(auto m :  ctre::search_all<R"((\d+) (red|green|blue)|(;))">(ln))
 		{
 			int val { sv_to_t<int>(m.get<1>())};
 			if(m.get<2>() == "red")
