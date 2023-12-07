@@ -36,7 +36,7 @@ auto get_input()
 	{
 		if (auto [m, t, f, s] = ctre::match<"(\\d+) (\\d+) (\\d+)">(ln); m)
 		{
-			tmp.emplace_back(f.to_number<uint_t>(), t.to_number<uint_t>(), s.to_number<uint_t>());
+			tmp.push_back({f.to_number<uint_t>(), t.to_number<uint_t>(), s.to_number<uint_t>()});
 		}
 		else
 		{

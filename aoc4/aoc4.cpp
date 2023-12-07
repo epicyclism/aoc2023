@@ -19,7 +19,7 @@ auto get_input()
 		have.clear();
 		bool b{ false };
 		auto be{ ln.find(": ") };
-		for (auto m : ctre::range<R"((\d+)|(\|))">(ln.begin() + be, ln.end()))
+		for (auto m : ctre::search_all<R"((\d+)|(\|))">(ln.begin() + be, ln.end()))
 		{
 			if (m.get<2>())
 				b = true;
