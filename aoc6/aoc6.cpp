@@ -20,6 +20,7 @@ auto get_input()
 	return rv;
 }
 
+#if 0
 auto count_above(auto tm, auto abv)
 {
 	decltype(abv) rv{ 0 };
@@ -31,19 +32,20 @@ auto count_above(auto tm, auto abv)
 	}
 	return rv;
 }
-
-auto count_above_q(auto tm, auto abv)
+#else
+auto count_above(auto tm, auto abv)
 {
 	auto l{ std::ceil((tm - std::sqrt((tm * tm) - (4 * abv))) / 2.0) };
 	auto r{ std::floor((tm + std::sqrt((tm * tm) - (4 * abv))) / 2.0) };
 	return static_cast<decltype(tm)>(r - l) + 1;
 }
+#endif
 
 auto pt1(auto const& in)
 {
 	int rv{ 1 };
 	for (auto& r : in)
-		rv *= count_above_q(r.first, r.second);
+		rv *= count_above(r.first, r.second);
 	return rv;
 }
 
@@ -71,7 +73,7 @@ auto pt2(auto const& in)
 		d *= factor(td.second);
 		d += td.second;
 	}
-	return count_above_q(tm, d);
+	return count_above(tm, d);
 }
 
 int main()
