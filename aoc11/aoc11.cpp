@@ -69,11 +69,10 @@ auto sum_distances(auto& in)
 {
 	int64 sum{ 0 };
 	for (auto a{ 0 }; a < in.size(); ++a)
-		for (auto b{ 0 }; b < in.size(); ++b)
-			if (a != b)
-				sum += std::abs(in[a].x_ - in[b].x_) + std::abs(in[a].y_ - in[b].y_);
+		for (auto b{ a + 1 }; b < in.size(); ++b)
+			sum += std::abs(in[a].x_ - in[b].x_) + std::abs(in[a].y_ - in[b].y_);
 
-	return sum / 2;
+	return sum;
 }
 
 auto pt1(auto in)
