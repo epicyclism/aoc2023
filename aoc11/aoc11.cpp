@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <numeric>
 
+#include "timer.h"
+
 using int64 = long long;
 struct pt
 {
@@ -51,16 +53,16 @@ void expand(auto& in, int64 amt)
 	std::ranges::sort(in, [](auto& l, auto& r) { return l.x_ < r.x_; });
 	std::vector<int64> tmp;
 	my_adj_diff(in, tmp, [](auto& l, auto& r){ return r.x_ - l.x_; });
-	std::transform(tmp.begin(), tmp.end(), tmp.begin(), [=](auto v) { if (v < 2) return 0LL; return (v - 1) * amt - 1; });
+	std::transform(tmp.begin(), tmp.end(), tmp.begin(), [=](auto v) { if (v < 2) return 0LL; return (v - 1) * (amt - 1); });
 	std::partial_sum(tmp.begin(), tmp.end(), tmp.begin());
-	std::transform(in.begin(), in.end(), tmp.begin(), in.begin(), [](auto& l, auto& r) { return pt{ l.x_ + r, l.y_ }; });
+	std::transform(in.begin(), in.end(), tmp.begin(), in.begin(), [](auto& l, auto r) { return pt{ l.x_ + r, l.y_ }; });
 
 	std::ranges::sort(in, [](auto& l, auto& r) { return l.y_ < r.y_; });
 	tmp.clear();
 	my_adj_diff(in, tmp, [](auto& l, auto& r) { return r.y_ - l.y_; });
-	std::transform(tmp.begin(), tmp.end(), tmp.begin(), [=](auto v) { if (v < 2) return 0LL; return (v - 1) * amt - 1; });
+	std::transform(tmp.begin(), tmp.end(), tmp.begin(), [=](auto v) { if (v < 2) return 0LL; return (v - 1) * (amt - 1); });
 	std::partial_sum(tmp.begin(), tmp.end(), tmp.begin());
-	std::transform(in.begin(), in.end(), tmp.begin(), in.begin(), [](auto& l, auto& r) { return pt{ l.x_, l.y_ + r }; });
+	std::transform(in.begin(), in.end(), tmp.begin(), in.begin(), [](auto& l, auto r) { return pt{ l.x_, l.y_ + r }; });
 }
 
 auto sum_distances(auto& in)
@@ -91,6 +93,12 @@ auto pt2(auto in)
 int main()
 {
 	auto in{ get_input() };
-	std::cout << "pt1 = " << pt1(in) << "\n";
-	std::cout << "pt2 = " << pt2(in) << "\n";
+	{
+		timer tm("pt1 ran in ");
+		std::cout << "pt1 = " << pt1(in) << "\n";
+	}
+	{
+		timer tm("pt2 ran in ");
+		std::cout << "pt2 = " << pt2(in) << "\n";
+	}
 }
