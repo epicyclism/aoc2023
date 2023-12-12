@@ -100,11 +100,15 @@ void match(graph_t const& g, int v, int_t& cnt, char const* pc)
 
 auto pt1(auto const& in)
 {
+	int n{ 0 };
 	int_t cnt{ 0 };
 	for (auto& r : in)
 	{
+		auto tmp_t{ cnt };
 		auto g{ make_graph(r.vg_) };
 		match(g, 0, cnt, r.map_.c_str());
+		std::cout << n << " : " << cnt - tmp_t << "\n";
+		++n;
 	}
 	return cnt;
 }
@@ -115,7 +119,7 @@ auto pt2(auto in)
 	{
 		std::string sn{ r.map_ };
 		std::vector<int> v{ r.vg_ };
-		for (int n = 0; n < 4; ++n)
+		for (int n = 0; n < 2; ++n)
 		{
 			sn += '?';
 			sn.append(r.map_);
@@ -124,19 +128,91 @@ auto pt2(auto in)
 		r.map_.swap(sn);
 		r.vg_.swap(v);
 	}
+	int n{ 0 };
 	int_t cnt{ 0 };
 	for (auto& r : in)
 	{
-		std::cout << cnt << "\n";
+		auto tmp_t{ cnt };
 		auto g{ make_graph(r.vg_) };
 		match(g, 0, cnt, r.map_.c_str());
+		std::cout << n << " : " << cnt - tmp_t << "\n";
+		++n;
 	}
 	return cnt;
+}
+
+void test(auto const& in)
+{
+	for (int n{ 0 }; n < std::min(in.size(), 30ULL); ++n)
+	{
+		auto g{ make_graph(in[n].vg_) };
+		std::string s{ in[n].map_ };
+
+		int_t cnt{ 0 };
+		match(g, 0, cnt, s.c_str());
+		auto a{ cnt };
+
+		std::string sn{ s };
+		auto vg{ in[n].vg_ };
+		std::vector<int> v{ vg };
+		for (int n = 0; n < 1; ++n)
+		{
+			sn += '?';
+			sn.append(s);
+			v.insert(v.end(), vg.begin(), vg.end());
+		}
+		g = make_graph(v);
+		cnt = 0;
+		match(g, 0, cnt, sn.c_str());
+		auto b{ cnt };
+
+		for (int n = 1; n < 2; ++n)
+		{
+			sn += '?';
+			sn.append(s);
+			v.insert(v.end(), vg.begin(), vg.end());
+		}
+		cnt = 0;
+		g = make_graph(v);
+		match(g, 0, cnt, sn.c_str());
+		auto c{ cnt };
+
+		for (int n = 1; n < 2; ++n)
+		{
+			sn += '?';
+			sn.append(s);
+			v.insert(v.end(), vg.begin(), vg.end());
+		}
+		cnt = 0;
+		if (n != 42)
+		{
+			g = make_graph(v);
+			match(g, 0, cnt, sn.c_str());
+		}
+		auto d{ cnt };
+
+		int_t cb{ c / b };
+		int_t mod{ b % a };
+		std::cout << a << ", " << b  << ", " << c << ", " << d;
+//		ba -= ba * mod;
+		int_t cc{ (a * cb * cb) };
+		std::cout << " - " << cc << "\n";
+
+		//		auto ba{ (b + a - 1) / a };
+//		if (b % a > 0)
+//			std::cout << "a * (b/a)^4!= " << (a * ba * ba * ba * ba) << " - (b % a = " << b % a << ")\n";
+//		else
+//			std::cout << "a * (b/a)^4 = " << (a * ba * ba * ba * ba) << "\n";
+	}
 }
 
 int main()
 {
 	auto in{ get_input() };
+#if 0
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";
+#else
+	test(in);
+#endif
 }
