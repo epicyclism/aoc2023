@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <set>
 
 #include "ctre_inc.h"
 
@@ -118,15 +119,22 @@ bool special_eq(std::vector<int> const& l, std::vector<int> const& r)
 	return l[n] <= r[n];
 }
 
-//void enumerate(graph_t const& g, std::string s, char v, std::vector<std::string>& vs, std::vector<int> const& vg, int_T& cnt)
+std::set<std::string> cache;
+
 void enumerate(graph_t const& g, std::string s, char v, std::vector<int> const& vg, int_t& cnt)
 {
-	if (!special_eq(to_g(s), vg))
+	if (cache.contains(s))
+	{
+		std::cout << "cache hit!\n";
 		return;
+	}
+	if (!special_eq(to_g(s), vg))
+	{
+		cache.insert(s);
+		return;
+	}
 	if (g[v][0].nxt_ == -1)
 	{
-//		std::cout << s << "\n";
-//		vs.emplace_back(s);
 		if (to_g(s) == vg)
 			++cnt;
 		return;
@@ -140,11 +148,11 @@ void enumerate(graph_t const& g, std::string s, char v, std::vector<int> const& 
 	}
 }
 
-//void enumerate(graph_t const& g, std::vector<std::string>& vs, std::vector<int> const& vg)
 void enumerate(graph_t const& g, std::vector<int> const& vg, int_t& cnt)
 {
 	char v{ 0 };
 	std::string s;
+	cache.clear();
 	enumerate(g, s, v, vg, cnt);
 }
 
