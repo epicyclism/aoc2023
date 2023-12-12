@@ -191,7 +191,7 @@ auto pt2(auto in)
 		{
 			sn += '?';
 			sn.append(r.map_);
-			v.append_range(r.vg_);
+			v.insert(v.end(), r.vg_.begin(), r.vg_.end());
 		}
 		r.map_.swap(sn);
 		r.vg_.swap(v);
