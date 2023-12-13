@@ -74,10 +74,10 @@ int_t match(graph_t const& g, int v, char const* pc, char const* pce)
 	{
 		if (g[v][0] == -2)
 		{
-//			cache.insert({ {g[v][0], 0}, 1 });
+			cache.insert({ {g[v][0], 0}, 1 });
 			return 1;
 		}
-//		cache.insert({ {g[v][0], 0}, 0 });
+		cache.insert({ {g[v][0], 0}, 0 });
 		return 0;
 	}
 	int_t rv{ 0 };
