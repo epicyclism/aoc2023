@@ -141,6 +141,7 @@ char ascii_to_val2(char c)
 	case 'A':
 		return 12;
 	}
+	return 0; // NOT REACHED WITH VALID INPUT...
 }
 
 void proc_hand2(hand& h)

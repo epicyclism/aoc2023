@@ -3,7 +3,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
-#include <set>
+#include <map>
 
 #include "ctre_inc.h"
 
@@ -25,166 +25,92 @@ auto get_input()
 		auto [m, s, g] = ctre::match<"([\\.\\?#]+) (.*)">(ln);
 		r.map_ = s;
 		for (auto v : ctre::search_all<"(\\d+)">(g.to_view()))
-		{
 			r.vg_.push_back(v.to_number<int>());
-		}
 		vr.emplace_back(r);
 	}
 	return vr;
 }
 
-struct edge
-{
-	char c_ = 0;
-	char nxt_ = -1;
-};
+using graph_t = std::vector<std::array<int, 2>>;
 
-using graph_t = std::vector<std::array<edge, 2>>;
-
-auto make_graph(std::string const& s)
+auto make_graph(std::vector<int> const& vg)
 {
 	graph_t g;
-	for (auto c : s)
+	std::array<int, 2> e;
+	e[0] = g.size() + 1; // hash
+	e[1] = g.size();     // loop
+	g.emplace_back(e);
+	for (auto v : vg)
 	{
-		std::array<edge, 2> e;
-		switch (c)
+		for (int n{ 0 }; n < v - 1; ++n)
 		{
-		case '.':
-			e[0].c_ = '.';
-			e[0].nxt_ = g.size() + 1;
-			e[1].c_ = ' ';
-			e[1].nxt_ = -1;
-			break;
-		case '#':
-			e[0].c_ = '#';
-			e[0].nxt_ = g.size() + 1;
-			e[1].c_ = ' ';
-			e[1].nxt_ = -1;
-			break;
-		case '?':
-			e[0].c_ = '#';
-			e[0].nxt_ = g.size() + 1;
-			e[1].c_ = '.';
-			e[1].nxt_ = g.size() + 1;
-			break;
-		default:
-			std::cout << "TILT\n";
-			break;
+			e[0] = g.size() + 1;
+			e[1] = -1;
+			g.emplace_back(e);
 		}
-		g.emplace_back(std::move(e));
+		e[0] = -1;			// not hash
+		e[1] = g.size() + 1;// next
+		g.emplace_back(e);
+		e[0] = g.size() + 1; // hash
+		e[1] = g.size();     // loop
+		g.emplace_back(e);
 	}
-	g.emplace_back();
+	g.pop_back();
+	g.pop_back();
+	e[0] = -2;			// not hash
+	e[1] = g.size();// loop
+	g.emplace_back(e);
+
 	return g;
 }
 
-std::vector<int> to_g(std::string const& s)
+std::map<std::pair<int, char const*>, int_t> cache;
+
+int_t match(graph_t const& g, int v, char const* pc, char const* pce)
 {
-	std::vector<int> rv;
-	int cnt{ 0 };
-	bool inhash{ false };
-	for (auto c : s)
+	if (cache.contains({ v, pc }))
+		return cache[{v, pc}];
+	if (*pc == 0)
 	{
-		if (c == '#')
+		if (g[v][0] == -2)
 		{
-			++cnt;
-			inhash = true;
+//			cache.insert({ {g[v][0], 0}, 1 });
+			return 1;
+		}
+//		cache.insert({ {g[v][0], 0}, 0 });
+		return 0;
+	}
+	int_t rv{ 0 };
+	if (*pc == '#')
+	{
+		if (g[v][0] > 0)
+			rv = match(g, g[v][0], pc + 1, pce);
+	}
+	else
+		if (*pc == '.')
+		{
+			if (g[v][1] != -1)
+				rv = match(g, g[v][1], pc + 1, pce);
 		}
 		else
 		{
-			if (inhash)
-			{
-				rv.push_back(cnt);
-				cnt = 0;
-				inhash = false;
-			}
+			if (g[v][0] > 0)
+				rv = match(g, g[v][0], pc + 1, pce);
+			if (g[v][1] != -1)
+				rv += match(g, g[v][1], pc + 1, pce);
 		}
-	}
-	if (cnt)
-		rv.push_back(cnt);
+	cache.insert({ {v, pc}, rv });
 	return rv;
-}
-
-bool special_eq(std::vector<int> const& l, std::vector<int> const& r)
-{
-	if (l.empty())
-		return true;
-	if (l.size() > r.size())
-		return false;
-	size_t n{ 0 };
-	for (; n < l.size() - 1; ++n)
-	{
-		if (l[n] != r[n])
-			return false;
-	}
-	return l[n] <= r[n];
-}
-
-std::set<std::string> cache;
-
-void enumerate(graph_t const& g, std::string s, char v, std::vector<int> const& vg, int_t& cnt)
-{
-	if (cache.contains(s))
-	{
-		std::cout << "cache hit!\n";
-		return;
-	}
-	if (!special_eq(to_g(s), vg))
-	{
-		cache.insert(s);
-		return;
-	}
-	if (g[v][0].nxt_ == -1)
-	{
-		if (to_g(s) == vg)
-			++cnt;
-		return;
-	}
-	s += g[v][0].c_;
-	enumerate(g, s, g[v][0].nxt_, vg, cnt);
-	if (g[v][1].nxt_ != -1)
-	{
-		s.back() = g[v][1].c_;
-		enumerate(g, s, g[v][1].nxt_, vg, cnt);
-	}
-}
-
-void enumerate(graph_t const& g, std::vector<int> const& vg, int_t& cnt)
-{
-	char v{ 0 };
-	std::string s;
-	cache.clear();
-	enumerate(g, s, v, vg, cnt);
-}
-
-int proc_vs(std::vector<int> const& vg, std::vector<std::string> const& vs)
-{
-	int c{ 0 };
-	for (auto& s: vs)
-	{
-		c += std::ranges::equal(vg, to_g(s));
-	}
-	return c;
 }
 
 auto pt1(auto const& in)
 {
-#if 0
-	for (auto& r : in)
-	{
-		std::cout << r.map_ << " [ ";
-		for (auto i : r.vg_)
-			std::cout << i << " ";
-		std::cout << " ]\n";
-	}
-#endif
 	int_t cnt{ 0 };
-	std::vector<std::string> vs;
 	for (auto& r : in)
 	{
-		vs.clear();
-		enumerate(make_graph(r.map_), r.vg_, cnt);
-//		cnt += proc_vs(r.vg_, vs);
-//		std::cout << "\n";
+		cache.clear();
+		auto g{ make_graph(r.vg_) };
+		cnt += match(g, 0, r.map_.c_str(), r.map_.c_str() + r.map_.size());
 	}
 	return cnt;
 }
@@ -205,14 +131,11 @@ auto pt2(auto in)
 		r.vg_.swap(v);
 	}
 	int_t cnt{ 0 };
-	std::cout << "0\n";
-//	std::vector<std::string> vs;
 	for (auto& r : in)
 	{
-//		vs.clear();
-		enumerate(make_graph(r.map_), r.vg_, cnt);
-//		cnt += proc_vs(r.vg_, vs);
-		std::cout << cnt << "\n";
+		cache.clear();
+		auto g{ make_graph(r.vg_) };
+		cnt += match(g, 0, r.map_.c_str(), r.map_.c_str() + r.map_.size());
 	}
 	return cnt;
 }
@@ -220,7 +143,7 @@ auto pt2(auto in)
 int main()
 {
 	auto in{ get_input() };
-	std::cout << "got " << in.size() << " rows\n";
+
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";
 }
