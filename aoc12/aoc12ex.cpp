@@ -71,48 +71,37 @@ void dump_g(graph_t const& g)
 		std::cout << c++ << ": " << n[0] << " - " << n[1] << "\n";
 }
 
-std::set<std::pair<int, char const*>> cache;
-
-void match(graph_t const& g, int v, int_t& cnt, char const* pc)
+void match(graph_t const& g, int v, int_t& cnt, char const* pc, char const* pce)
 {
-	if (cache.contains({ v, pc }))
-		return;
 	if (*pc == 0)
 	{
 		if (g[v][0] == -2)
 			++cnt;
 		return;
 	}
+	if (pce - pc + 1 < g.size() - v)
+		return;
 	if (*pc == '#')
 	{
 		if (g[v][0] > 0)
-			match(g, g[v][0], cnt, pc + 1);
-		else
-			cache.insert({ v, pc });
+			match(g, g[v][0], cnt, pc + 1, pce);
 	}
 	else
 	if (*pc == '.')
 	{
 		if (g[v][1] != -1)
-			match(g, g[v][1], cnt, pc + 1);
-		else
-			cache.insert({ v, pc });
+			match(g, g[v][1], cnt, pc + 1, pce);
 	}
 	else
 	{
-		bool go{ false };
 		if (g[v][0] > 0)
 		{
-			go = true;
-			match(g, g[v][0], cnt, pc + 1);
+			match(g, g[v][0], cnt, pc + 1, pce);
 		}
 		if (g[v][1] != -1)
 		{
-			go = true;
-			match(g, g[v][1], cnt, pc + 1);
+			match(g, g[v][1], cnt, pc + 1, pce);
 		}
-		if(!go)
-			cache.insert({ v, pc });
 	}
 }
 
@@ -123,8 +112,7 @@ auto pt1(auto const& in)
 	{
 		auto tmp_t{ cnt };
 		auto g{ make_graph(r.vg_) };
-		cache.clear();
-		match(g, 0, cnt, r.map_.c_str());
+		match(g, 0, cnt, r.map_.c_str(), r.map_.c_str() + r.map_.size());
 	}
 	return cnt;
 }
@@ -149,8 +137,7 @@ auto pt2(auto in)
 	{
 		auto tmp_t{ cnt };
 		auto g{ make_graph(r.vg_) };
-		cache.clear();
-		match(g, 0, cnt, r.map_.c_str());
+		match(g, 0, cnt, r.map_.c_str(), r.map_.c_str() + r.map_.size());
 		std::cout << cnt - tmp_t << "\n";
 	}
 	return cnt;

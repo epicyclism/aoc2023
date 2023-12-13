@@ -62,6 +62,7 @@ char ascii_to_val(char c)
 	case 'A':
 		return 12;
 	}
+	return 0; // NOT REACHED WITH VALID INPUT...
 }
 
 void proc_hand(hand & h)
