@@ -117,6 +117,7 @@ auto pt1(auto const& in)
 
 auto pt2(auto in)
 {
+	size_t max_s{ 0 };
 	for (auto& r : in)
 	{
 		std::string sn{ r.map_ };
@@ -127,16 +128,32 @@ auto pt2(auto in)
 			sn.append(r.map_);
 			v.insert(v.end(), r.vg_.begin(), r.vg_.end());
 		}
+		if (sn.size() > max_s)
+			max_s = sn.size();
 		r.map_.swap(sn);
 		r.vg_.swap(v);
 	}
+	size_t max_g{ 0 };
+	int_t  max_ce{ 0 };
+	size_t max_c{ 0 };
 	int_t cnt{ 0 };
 	for (auto& r : in)
 	{
 		cache.clear();
 		auto g{ make_graph(r.vg_) };
+		if (g.size() > max_g)
+			max_g = g.size();
 		cnt += match(g, 0, r.map_.c_str(), r.map_.c_str() + r.map_.size());
+		if (cache.size() > max_c)
+			max_c = cache.size();
+		for (auto& ce : cache)
+			if (ce.second > max_ce)
+				max_ce = ce.second;
 	}
+	std::cout << "\nmax_s  = " << max_s << "\n";
+	std::cout << "max_g  = " << max_g << "\n";
+	std::cout << "max_c  = " << max_c << "\n";
+	std::cout << "max_ce = " << max_ce << "\n";
 	return cnt;
 }
 
