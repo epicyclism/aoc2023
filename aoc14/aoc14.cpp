@@ -194,6 +194,7 @@ int pt2(auto const& in)
 		std::cout << "Expansion too small to find cycle, adjust and rebuild!\n";
 		return -1;
 	}
+//	std::cout << "Cycle length = " << std::distance(b, n) << "\n";
 	// assuming cycle length + preamble less than 512....
 	// and that the value at the end is unique in the cycle.
 	// this is a good bet, but not a sure thing...
