@@ -64,42 +64,78 @@ auto make_graph(std::vector<int> const& vg)
 	return g;
 }
 
+#if 1
 std::map<std::pair<int, char const*>, int_t> cache;
-
-int_t match(graph_t const& g, int v, char const* pc, char const* pce)
+inline bool cache_contains(int v, char const* pc)
 {
-	if (cache.contains({ v, pc }))
-		return cache[{v, pc}];
+	return cache.contains({ v, pc });
+}
+inline int_t cache_get(int v, char const* pc)
+{
+	return cache[{v, pc}];
+}
+inline void cache_insert(int v, char const* pc, int_t val)
+{
+	cache.insert({ {v, pc}, val });
+}
+inline void cache_clear()
+{
+	cache.clear();
+}
+#else
+std::array<int_t, 16384> cache;
+inline unsigned cache_key(int v, void const* pc)
+{
+	return (v & 0x7f) | ((int_t(pc) & 0x7f) << 7);
+}
+inline bool cache_contains(int v, char const* pc)
+{
+	return cache[cache_key( v, pc )] != 0;
+}
+inline int_t cache_get(int v, char const* pc)
+{
+	return cache[cache_key(v, pc)];
+}
+inline void cache_insert(int v, char const* pc, int_t val)
+{
+	cache[cache_key(v, pc)] = val;
+}
+inline void cache_clear()
+{
+	cache.fill(0);
+}
+#endif
+
+int_t match(graph_t const& g, int v, char const* pc)
+{
+	if (cache_contains( v, pc ))
+		return cache_get(v, pc);
 	if (*pc == 0)
 	{
 		if (g[v][0] == -2)
-		{
-			cache.insert({ {g[v][0], 0}, 1 });
 			return 1;
-		}
-		cache.insert({ {g[v][0], 0}, 0 });
 		return 0;
 	}
 	int_t rv{ 0 };
 	if (*pc == '#')
 	{
 		if (g[v][0] > 0)
-			rv = match(g, g[v][0], pc + 1, pce);
+			rv = match(g, g[v][0], pc + 1);
 	}
 	else
 		if (*pc == '.')
 		{
 			if (g[v][1] != -1)
-				rv = match(g, g[v][1], pc + 1, pce);
+				rv = match(g, g[v][1], pc + 1);
 		}
 		else
 		{
 			if (g[v][0] > 0)
-				rv = match(g, g[v][0], pc + 1, pce);
+				rv = match(g, g[v][0], pc + 1);
 			if (g[v][1] != -1)
-				rv += match(g, g[v][1], pc + 1, pce);
+				rv += match(g, g[v][1], pc + 1);
 		}
-	cache.insert({ {v, pc}, rv });
+	cache_insert( v, pc, rv );
 	return rv;
 }
 
@@ -108,16 +144,15 @@ auto pt1(auto const& in)
 	int_t cnt{ 0 };
 	for (auto& r : in)
 	{
-		cache.clear();
+		cache_clear();
 		auto g{ make_graph(r.vg_) };
-		cnt += match(g, 0, r.map_.c_str(), r.map_.c_str() + r.map_.size());
+		cnt += match(g, 0, r.map_.c_str());
 	}
 	return cnt;
 }
 
 auto pt2(auto in)
 {
-	size_t max_s{ 0 };
 	for (auto& r : in)
 	{
 		std::string sn{ r.map_ };
@@ -128,32 +163,16 @@ auto pt2(auto in)
 			sn.append(r.map_);
 			v.insert(v.end(), r.vg_.begin(), r.vg_.end());
 		}
-		if (sn.size() > max_s)
-			max_s = sn.size();
 		r.map_.swap(sn);
 		r.vg_.swap(v);
 	}
-	size_t max_g{ 0 };
-	int_t  max_ce{ 0 };
-	size_t max_c{ 0 };
 	int_t cnt{ 0 };
 	for (auto& r : in)
 	{
-		cache.clear();
+		cache_clear();
 		auto g{ make_graph(r.vg_) };
-		if (g.size() > max_g)
-			max_g = g.size();
-		cnt += match(g, 0, r.map_.c_str(), r.map_.c_str() + r.map_.size());
-		if (cache.size() > max_c)
-			max_c = cache.size();
-		for (auto& ce : cache)
-			if (ce.second > max_ce)
-				max_ce = ce.second;
+		cnt += match(g, 0, r.map_.c_str());
 	}
-	std::cout << "\nmax_s  = " << max_s << "\n";
-	std::cout << "max_g  = " << max_g << "\n";
-	std::cout << "max_c  = " << max_c << "\n";
-	std::cout << "max_ce = " << max_ce << "\n";
 	return cnt;
 }
 

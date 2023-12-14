@@ -195,6 +195,8 @@ int pt2(auto const& in)
 		return -1;
 	}
 	// assuming cycle length + preamble less than 512....
+	// and that the value at the end is unique in the cycle.
+	// this is a good bet, but not a sure thing...
 	auto cycle_len{ std::distance(b, n) };
 	auto preamble{ std::distance(vr.begin(), b) };
 	auto val_at{ vr.begin() + (1000000000 - preamble) % cycle_len + preamble - 1 };
