@@ -10,7 +10,7 @@
 auto get_input()
 {
 	std::vector<char> v;
-	size_t stride { 0 };
+	int stride { 0 };
 	std::string ln;
 	while(std::getline(std::cin, ln))
 	{
@@ -22,7 +22,7 @@ auto get_input()
 
 using edge_t = std::pair<int, int>;
 
-edge_t move(edge_t e, int g, int s)
+edge_t move(edge_t e, int g, unsigned s)
 {
 	if((e.second == 1 && (e.first + 1 ) % s ) ||
 		(e.second == -1 && e.first % s > 0) ||
@@ -32,62 +32,62 @@ edge_t move(edge_t e, int g, int s)
 	return {-1, -1};
 }
 
-auto pt1(auto const& in)
+int compute_from(auto const& in, int start, int dir)
 {
 	std::vector<char> const& v { in.first };
-	size_t s { in.second };
+	int s { in.second };
 	std::vector<int> visited(v.size(), 0);
 	std::queue<edge_t> q;
-    q.push({0, 1});
+    q.push({start, dir});
 	int n { 0 };
     while (!q.empty())
     {
         auto u = q.front(); q.pop();
-		++visited[u.first];
-		auto nxt { move(u, v.size(), s)};
-		if(nxt.first != -1)
+		if(u.first != -1)
 		{
-			switch(v[nxt.first])
+			++visited[u.first];
+			switch(v[u.first])
 			{
 				case '\\':
-					if(nxt.second == 1 || nxt.second == -1)
-						q.push({nxt.first, nxt.second * s});
+					if(u.second == 1 || u.second == -1)
+						q.push(move({u.first, u.second * s}, v.size(), s));
 					else
-						q.push({nxt.first, nxt.second / s});
+						q.push(move({u.first, u.second / s}, v.size(), s));
 					break;
 				case '/':
-					if(nxt.second == 1 || nxt.second == -1)
-						q.push({nxt.first, nxt.second * -s});
+					if(u.second == 1 || u.second == -1)
+						q.push(move({u.first, u.second * -s}, v.size(), s));
 					else
-						q.push({nxt.first, nxt.second / -s});
+						q.push(move({u.first, u.second / -s}, v.size(), s));
 					break;
 				case '-':
-					if(nxt.second == 1 || nxt.second == -1)
-						q.push(nxt);
+					if(u.second == 1 || u.second == -1)
+						q.push(move(u, v.size(), s));
 					else
 					{
-						q.push({nxt.first, 1});
-						q.push({nxt.first, -1});
+						q.push(move({u.first, 1}, v.size(), s));
+						q.push(move({u.first, -1}, v.size(), s));
 					}
 					break;
 				case '|':
-					if(nxt.second == s || nxt.second == -s)
-						q.push(nxt);
+					if(u.second == s || u.second == -s)
+						q.push(move(u, v.size(), s));
 					else
 					{				
-						q.push({nxt.first, s});
-						q.push({nxt.first, -s});
+						q.push(move({u.first, s}, v.size(), s));
+						q.push(move({u.first, -s}, v.size(), s));
 					}
 					break;
 				default:
-					q.push(nxt);
+					q.push(move(u, v.size(), s));
 					break;
 			}
 		}
 		++n;
-		if( n == 10000)
+		if( n == 10000000)
 			break;
     }
+#if 0
 	n = 0;
 	for(auto v : visited)
 	{
@@ -99,7 +99,46 @@ auto pt1(auto const& in)
 			n = 0;
 		}
 	}
+#endif
 	return std::ranges::count_if(visited, [](auto val){ return val > 0;});
+}
+
+auto pt1(auto const& in)
+{
+	return compute_from(in, 0, 1);
+}
+
+auto pt2(auto const& in)
+{
+	std::vector<char> const& v { in.first };
+	int s { in.second };
+
+	int mx { 0 };
+	for(int st = 0; st < s; ++st)
+	{
+		int v { compute_from(in, st, s)};
+		if( v > mx)
+			mx = v;
+	}
+	for(int st = 0; st < v.size(); st += s)
+	{
+		int v { compute_from(in, st, 1)};
+		if( v > mx)
+			mx = v;
+	}
+	for(int st = v.size() - s; st < v.size(); ++st)
+	{
+		int v { compute_from(in, st, -s)};
+		if( v > mx)
+			mx = v;
+	}
+	for(int st = s - 1; st < v.size(); st += s)
+	{
+		int v { compute_from(in, st, -1)};
+		if( v > mx)
+			mx = v;
+	}
+	return mx;
 }
 
 int main()
@@ -107,4 +146,5 @@ int main()
 	auto in{get_input()};
 	std::cout << "cell count " << in.first.size() << ", stride = " << in.second << "\n";
 	std::cout << "pt1 = " << pt1(in) << "\n";
+	std::cout << "pt2 = " << pt2(in) << "\n";
 }
