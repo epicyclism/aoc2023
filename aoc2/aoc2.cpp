@@ -82,7 +82,6 @@ int pt2(auto const& in)
 int main()
 {
 	auto in { get_input()};
-	std::cout << in.size() << " games\n";
 
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";

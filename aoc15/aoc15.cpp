@@ -69,15 +69,28 @@ auto pt2(auto const& in)
 	std::array<box, 256> boxes;
 	for (auto& i : in)
 	{
+#if 0
 		auto m = ctre::match<"([^\\-=]+)[\\-=](\\d*)">(i);
 		if (m)
 		{
-			auto h{ HASH( m.get<1>())};
+			auto h{ HASH m.get<1>()};
 			if (!m.get<2>().view().empty())
 				boxes[h].add_lens(m.get<1>(), m.get<2>().to_number<unsigned char>());
 			else
 				boxes[h].remove_lens(m.get<1>());
 		}
+#else
+		auto[m, b, v] = ctre::match<"([^\\-=]+)[\\-=](\\d*)">(i);
+		if (m)
+		{
+			auto h{ HASH (b)};
+			if (v.view().empty())
+				boxes[h].remove_lens(b);
+			else
+				boxes[h].add_lens(b, sv_to_t<unsigned char>(v));
+		}
+
+#endif
 	}
 	int rv{ 0 };
 	for (int n = 0; n < boxes.size(); ++n)

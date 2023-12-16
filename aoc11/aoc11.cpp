@@ -4,13 +4,13 @@
 #include <algorithm>
 #include <numeric>
 
-#include "timer.h"
-
 using int64 = long long;
 struct pt
 {
 	int64 x_;
 	int64 y_;
+	pt(int64 x, int64 y) : x_{x}, y_{y}
+	{}
 };
 
 pt operator+(pt const& l, pt const& r)
@@ -92,12 +92,6 @@ auto pt2(auto in)
 int main()
 {
 	auto in{ get_input() };
-	{
-		timer tm("pt1 ran in ");
-		std::cout << "pt1 = " << pt1(in) << "\n";
-	}
-	{
-		timer tm("pt2 ran in ");
-		std::cout << "pt2 = " << pt2(in) << "\n";
-	}
+	std::cout << "pt1 = " << pt1(in) << "\n";
+	std::cout << "pt2 = " << pt2(in) << "\n";
 }

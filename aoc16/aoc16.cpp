@@ -136,7 +136,7 @@ auto pt2(auto const& in)
 int main()
 {
 	auto in{get_input()};
-	std::cout << "cell count " << in.first.size() << ", stride = " << in.second << "\n";
+
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";
 }

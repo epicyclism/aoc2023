@@ -8,8 +8,6 @@
 #include <experimental/mdspan>
 namespace stdex = std::experimental;
 
-#include "timer.h"
-
 auto get_input()
 {
 	std::vector<char> g;
@@ -319,12 +317,7 @@ auto pt2(auto& g)
 int main()
 {
 	auto in {get_input()};
-	{
-		timer tm{"part 1 ran in"};
-		std::cout << "pt1 = " << pt1(in) << "\n";
-	}
-	{
-		timer tm("part 2 ran in");
-		std::cout << "pt2 = " << pt2(in) << "\n";
-	}
+
+	std::cout << "pt1 = " << pt1(in) << "\n";
+	std::cout << "pt2 = " << pt2(in) << "\n";
 }
