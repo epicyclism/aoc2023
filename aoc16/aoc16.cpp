@@ -1,11 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-// #include <array>
 #include <queue>
 #include <algorithm>
-
-//#include "graph.h"
 
 auto get_input()
 {
@@ -32,6 +29,17 @@ edge_t move(edge_t e, int g, unsigned s)
 	return {-1, -1};
 }
 
+int dir_to_bit(int d)
+{
+	if( d == 1)
+		return 1;
+	if( d == -1)
+		return 2;
+	if( d < 0)
+		return 4;
+	return 8;
+}
+
 int compute_from(auto const& in, int start, int dir)
 {
 	std::vector<char> const& v { in.first };
@@ -39,13 +47,12 @@ int compute_from(auto const& in, int start, int dir)
 	std::vector<int> visited(v.size(), 0);
 	std::queue<edge_t> q;
     q.push({start, dir});
-	int n { 0 };
     while (!q.empty())
     {
         auto u = q.front(); q.pop();
-		if(u.first != -1)
+		if(u.first != -1 && !(visited[u.first] & dir_to_bit(u.second)))
 		{
-			++visited[u.first];
+			visited[u.first] |= dir_to_bit(u.second);
 			switch(v[u.first])
 			{
 				case '\\':
@@ -83,23 +90,8 @@ int compute_from(auto const& in, int start, int dir)
 					break;
 			}
 		}
-		++n;
-		if( n == 10000000)
-			break;
     }
-#if 0
-	n = 0;
-	for(auto v : visited)
-	{
-		std::cout << (v == 0 ? '.' : '*') ;
-		++n;
-		if( n == s)
-		{
-			std::cout << "\n";
-			n = 0;
-		}
-	}
-#endif
+
 	return std::ranges::count_if(visited, [](auto val){ return val > 0;});
 }
 
