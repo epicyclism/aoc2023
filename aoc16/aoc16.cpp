@@ -53,7 +53,7 @@ bool valid_step_right(size_t s, int f)
 auto build_g(std::vector<char> const& v, size_t s)
 {
 	graph_t g;
-	for(size_t p{ 0}; p < v.size(); ++p)
+	for(size_t p{0}; p < v.size(); ++p)
 	{
 		switch(v[p])
 		{
@@ -73,7 +73,7 @@ auto build_g(std::vector<char> const& v, size_t s)
 							break;
 						case '-':
 							if( valid_step_left(s, p - s))
-								add_edge(g, p, p - s - 1, p - s);
+								add_edge(g, p, p - s - 1, p);
 							if(valid_step_right(s, p - s))
 								add_edge(g, p, p - s + 1, p - s);
 							break;
@@ -85,7 +85,7 @@ auto build_g(std::vector<char> const& v, size_t s)
 				if( valid_step_down(v.size(), s, p))
 				{
 					// going down
-					switch(v[p - s])
+					switch(v[p + s])
 					{
 						case '\\':
 							if(valid_step_right(s, p + s))
@@ -109,7 +109,7 @@ auto build_g(std::vector<char> const& v, size_t s)
 				if( valid_step_left(s, p))
 				{
 					// going left
-					switch(v[p - s])
+					switch(v[p - 1])
 					{
 						case '\\':
 							if( valid_step_up(s, p - 1))
@@ -122,7 +122,7 @@ auto build_g(std::vector<char> const& v, size_t s)
 						case '|':
 							if( valid_step_up(s, p - 1))
 								add_edge(g, p, p - s - 1, p - 1);
-							if(valid_step_down(s, v.size(), p - 1))
+							if(valid_step_down(v.size(), s, p - 1))
 								add_edge(g, p, p + s - 1, p - 1);
 							break;
 						default:
@@ -134,10 +134,10 @@ auto build_g(std::vector<char> const& v, size_t s)
 				if(valid_step_right(s, p))
 				{
 					// going right
-					switch(v[p - s])
+					switch(v[p + 1])
 					{
 						case '\\':
-							if(valid_step_down(s, v.size(), p + 1))
+							if(valid_step_down(v.size(), s, p + 1))
 								add_edge(g, p, p + s + 1, p + 1);
 							break;
 						case '/':
@@ -145,7 +145,7 @@ auto build_g(std::vector<char> const& v, size_t s)
 								add_edge(g, p, p - s + 1, p + 1);
 							break;
 						case '|':
-							if(valid_step_down(s, v.size(), p + 1))
+							if(valid_step_down(v.size(), s, p + 1))
 								add_edge(g, p, p + s + 1, p + 1);
 							if( valid_step_up(s, p + 1))
 								add_edge(g, p, p - s + 1, p + 1);
@@ -158,15 +158,15 @@ auto build_g(std::vector<char> const& v, size_t s)
 				}
 				break;
 			case '|':
-				if(valid_step_up(p, s))
+				if(valid_step_up( s, p))
 					add_edge(g, p, p - s, -1);
 				if(valid_step_down(v.size(), s, p))
 					add_edge(g, p, p + s, -1);
 				break;
 			case '-':
-				if( valid_step_left(p, s))
+				if( valid_step_left(s, p))
 					add_edge(g, p, p - 1, -1);
-				if(valid_step_right(p, s))
+				if(valid_step_right(s, p))
 					add_edge(g, p, p + 1, -1);
 				break;
 			default:
@@ -182,8 +182,13 @@ auto pt1(auto const& in)
 	std::vector<char> const& v { in.first };
 	size_t s { in.second };
 	auto g { build_g(v, s)};
-	for(auto& e: g[0])
-		std::cout << "( " << e.first << ", " << e.second << " )\n";
+	for (auto v{ 0 }; v < 10; ++v)
+	{
+		std::cout << v << " = ";
+		for (auto& e : g[v])
+			std::cout << "( " << e.first << ", " << e.second << " ) ";
+		std::cout << "\n";
+	}
 	std::vector<int> visited(v.size(), 0);
 	std::queue<edge_t> q;
     q.push({0, -1});
