@@ -20,194 +20,85 @@ auto get_input()
 	return std::make_pair(v, stride);
 }
 
-using edge_t = std::pair<int, int>; 
-using graph_t = std::vector<std::vector<edge_t>>;
+using edge_t = std::pair<int, int>;
 
-void add_edge(auto& g, int from, int to, int via )
+edge_t move(edge_t e, int g, int s)
 {
-    if (g.size() < from + 1)
-        g.resize(from + 1);
-    g[from].emplace_back(to, via);
-}
-
-bool valid_step_up(size_t s, int f)
-{
-	return f > s;
-}
-
-bool valid_step_down(size_t g, size_t s, int f)
-{
-	return f + s < g;
-}
-
-bool valid_step_left(size_t s, int f)
-{
-	return f % s > 0;
-}
-
-bool valid_step_right(size_t s, int f)
-{
-	return (f + 1) % s != 0;
-}
-
-auto build_g(std::vector<char> const& v, size_t s)
-{
-	graph_t g;
-	for(size_t p{0}; p < v.size(); ++p)
-	{
-		switch(v[p])
-		{
-			case '.':
-				if( valid_step_up(s, p))
-				{
-					// going up
-					switch(v[p - s])
-					{
-						case '\\':
-							if( valid_step_left(s, p - s))
-								add_edge(g, p, p - s - 1, p - s);
-							break;
-						case '/':
-							if(valid_step_right(s, p - s))
-								add_edge(g, p, p - s + 1, p - s);
-							break;
-						case '-':
-							if( valid_step_left(s, p - s))
-								add_edge(g, p, p - s - 1, p);
-							if(valid_step_right(s, p - s))
-								add_edge(g, p, p - s + 1, p - s);
-							break;
-						default:
-							add_edge(g, p, p - s, -1);
-							break;
-					}
-				}
-				if( valid_step_down(v.size(), s, p))
-				{
-					// going down
-					switch(v[p + s])
-					{
-						case '\\':
-							if(valid_step_right(s, p + s))
-								add_edge(g, p, p + s + 1, p + s);
-							break;
-						case '/':
-							if( valid_step_left(s, p + s))
-								add_edge(g, p, p + s - 1, p + s);
-							break;
-						case '-':
-							if(valid_step_right(s, p + s))
-								add_edge(g, p, p + s + 1, p + s);
-							if( valid_step_left(s, p + s))
-								add_edge(g, p, p + s - 1, p + s);
-							break;
-						default:
-							add_edge(g, p, p + s, -1);
-							break;
-					}
-				}
-				if( valid_step_left(s, p))
-				{
-					// going left
-					switch(v[p - 1])
-					{
-						case '\\':
-							if( valid_step_up(s, p - 1))
-								add_edge(g, p, p - s - 1, p - 1);
-							break;
-						case '/':
-							if(valid_step_down(s, v.size(), p - 1))
-								add_edge(g, p, p + s - 1, p - 1);
-							break;
-						case '|':
-							if( valid_step_up(s, p - 1))
-								add_edge(g, p, p - s - 1, p - 1);
-							if(valid_step_down(v.size(), s, p - 1))
-								add_edge(g, p, p + s - 1, p - 1);
-							break;
-						default:
-							add_edge(g, p, p - 1, -1);
-							break;
-					}
-
-				}
-				if(valid_step_right(s, p))
-				{
-					// going right
-					switch(v[p + 1])
-					{
-						case '\\':
-							if(valid_step_down(v.size(), s, p + 1))
-								add_edge(g, p, p + s + 1, p + 1);
-							break;
-						case '/':
-							if( valid_step_up(s, p + 1))
-								add_edge(g, p, p - s + 1, p + 1);
-							break;
-						case '|':
-							if(valid_step_down(v.size(), s, p + 1))
-								add_edge(g, p, p + s + 1, p + 1);
-							if( valid_step_up(s, p + 1))
-								add_edge(g, p, p - s + 1, p + 1);
-							break;
-						default:
-							add_edge(g, p, p + 1, -1);
-							break;
-					}
-
-				}
-				break;
-			case '|':
-				if(valid_step_up( s, p))
-					add_edge(g, p, p - s, -1);
-				if(valid_step_down(v.size(), s, p))
-					add_edge(g, p, p + s, -1);
-				break;
-			case '-':
-				if( valid_step_left(s, p))
-					add_edge(g, p, p - 1, -1);
-				if(valid_step_right(s, p))
-					add_edge(g, p, p + 1, -1);
-				break;
-			default:
-				break;
-		}
-	}
-
-	return g;
+	if((e.second == 1 && (e.first + 1 ) % s ) ||
+		(e.second == -1 && e.first % s > 0) ||
+		(e.second == s && e.first + s < g) ||
+		(e.second == -s && e.first >= s))
+		return {e.first + e.second, e.second};
+	return {-1, -1};
 }
 
 auto pt1(auto const& in)
 {
 	std::vector<char> const& v { in.first };
 	size_t s { in.second };
-	auto g { build_g(v, s)};
-	for (auto v{ 0 }; v < 10; ++v)
-	{
-		std::cout << v << " = ";
-		for (auto& e : g[v])
-			std::cout << "( " << e.first << ", " << e.second << " ) ";
-		std::cout << "\n";
-	}
 	std::vector<int> visited(v.size(), 0);
 	std::queue<edge_t> q;
-    q.push({0, -1});
+    q.push({0, 1});
 	int n { 0 };
     while (!q.empty())
     {
         auto u = q.front(); q.pop();
-        for (auto& e : g[u.first])
-        {
-			++visited[e.first];
-			if( e.second != -1)
-				++visited[e.second];
-			q.push(e);
-        }
+		++visited[u.first];
+		auto nxt { move(u, v.size(), s)};
+		if(nxt.first != -1)
+		{
+			switch(v[nxt.first])
+			{
+				case '\\':
+					if(nxt.second == 1 || nxt.second == -1)
+						q.push({nxt.first, nxt.second * s});
+					else
+						q.push({nxt.first, nxt.second / s});
+					break;
+				case '/':
+					if(nxt.second == 1 || nxt.second == -1)
+						q.push({nxt.first, nxt.second * -s});
+					else
+						q.push({nxt.first, nxt.second / -s});
+					break;
+				case '-':
+					if(nxt.second == 1 || nxt.second == -1)
+						q.push(nxt);
+					else
+					{
+						q.push({nxt.first, 1});
+						q.push({nxt.first, -1});
+					}
+					break;
+				case '|':
+					if(nxt.second == s || nxt.second == -s)
+						q.push(nxt);
+					else
+					{				
+						q.push({nxt.first, s});
+						q.push({nxt.first, -s});
+					}
+					break;
+				default:
+					q.push(nxt);
+					break;
+			}
+		}
 		++n;
-		if( n == 1000000)
+		if( n == 10000)
 			break;
     }
-
+	n = 0;
+	for(auto v : visited)
+	{
+		std::cout << (v == 0 ? '.' : '*') ;
+		++n;
+		if( n == s)
+		{
+			std::cout << "\n";
+			n = 0;
+		}
+	}
 	return std::ranges::count_if(visited, [](auto val){ return val > 0;});
 }
 
