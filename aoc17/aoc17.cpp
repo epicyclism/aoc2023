@@ -139,7 +139,7 @@ auto pt1(auto const& in)
 				xy = move(p.x_, p.y_, p.d_);
 				if (valid_move(xy.first, xy.second, md))
 				{
-					path np{ xy.first, xy.second, p.d_, p.steps_ + 1 };
+					path np{ xy.first, xy.second, p.d_, ++p.steps_ };
 					auto ns{ sc + md(xy.second, xy.first) };
 					auto ic{ cache.find(np) };
 					if (ic == cache.end() || (*ic).second > ns)
@@ -218,7 +218,7 @@ auto pt2(auto const& in)
 				auto xy = move(p.x_, p.y_, p.d_);
 				if (valid_move(xy.first, xy.second, md))
 				{
-					path np{ xy.first, xy.second, p.d_, p.steps_ + 1 };
+					path np{ xy.first, xy.second, p.d_, ++p.steps_ };
 					auto ns{ sc + md(xy.second, xy.first) };
 					auto ic{ cache.find(np) };
 					if (ic == cache.end() || (*ic).second > ns)
