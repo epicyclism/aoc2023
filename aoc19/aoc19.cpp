@@ -2,36 +2,77 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <queue>
 #include <algorithm>
 #include <numeric>
 
+//#include "boost/icl/discrete_interval.hpp"
+#include <boost/icl/closed_interval.hpp>
+
 #include "ctre_inc.h"
 
-enum condition { x, m, a, s, u };
-struct rule
+using namespace boost::icl;
+
+struct edge
 {
-	condition c_;
-	char      op_;
-	int       val_;
-	std::string tgt_;
+	closed_interval<int> x_;
+	closed_interval<int> m_;
+	closed_interval<int> a_;
+	closed_interval<int> s_;
+	size_t tgt_;
 };
 
-condition condition_from_char(char c)
+edge make_edge(size_t tgt)
 {
-	switch (c)
-	{
-	case 'x':
-		return x;
-	case 'm':
-		return m;
-	case 'a':
-		return a;
-	case 's':
-		return s;
-	}
-	return u;
+	return edge { { 1, 4000}, {1, 4000}, {1, 4000}, {1, 4000}, tgt };
 }
 
+edge make_edge(char xmas, char op, int val, size_t tgt)
+{
+	edge e{ { 1, 4000}, {1, 4000}, {1, 4000}, {1, 4000}, tgt };
+	closed_interval<int> ii{ 1, 4000 };
+	if (op == '<')
+		ii = construct<closed_interval<int>>(1, val);
+	else
+		ii = construct<closed_interval<int>>(val + 1, 4000);
+	switch (xmas)
+	{
+	case 'x':
+		e.x_ = ii;
+		break;
+	case 'm':
+		e.m_ = ii;
+		break;
+	case 'a':
+		e.a_ = ii;
+		break;
+	case 's':
+		e.s_ = ii;
+		break;
+	}
+	return e;
+}
+
+struct graph_t
+{
+	std::vector<std::vector<edge>> g_;
+	size_t in_;
+	size_t A_;
+	size_t R_;
+};
+
+void print(graph_t const& g)
+{
+	size_t v{ 0 };
+	for (auto& al : g.g_)
+	{
+		std::cout << v << " : ";
+		for (auto& e : al)
+			std::cout << e.tgt_ << ", ";
+		++v;
+		std::cout << "\n";
+	}
+}
 
 struct part
 {
@@ -42,9 +83,29 @@ struct part
 	bool accepted_;
 };
 
+size_t id_from_s(std::string_view s)
+{
+	static std::map<std::string, size_t> id;
+	auto ii{ id.find(std::string(s)) };
+	if (ii == id.end())
+	{
+//		std::cout << s << " -> " << id.size() << "\n";
+		id.emplace(std::string(s), id.size());
+		return id.size() - 1;
+	}
+//	std::cout << s << " -> " << (*ii).second << "\n";
+	return (*ii).second;
+}
+
+void add_vertex(auto& g, size_t e)
+{
+	if (g.size() <= e)
+		g.resize(e + 1);
+}
+
 auto get_input()
 {
-	std::map<std::string, std::vector<rule>> flows;
+	graph_t flows;
 	std::vector<part> parts;
 
 	std::string ln;
@@ -54,21 +115,29 @@ auto get_input()
 			break;
 		if (auto [m, n, rs] = ctre::match<"([^\\{]+)\\{([^\\}]+)\\}">(ln); m)
 		{
-			auto& i = flows[n.to_string()];
+			auto vid{ id_from_s(n) };
+			add_vertex(flows.g_, vid);
 			for (auto [m1, vm, op, val, dest] : ctre::search_all<"([xmas])([><])(\\d+):([^,]+)">(rs))
-				i.emplace_back( condition_from_char(vm.view()[0]), op.view()[0], val.to_number<int>(), dest.to_string()) ;
+			{
+				auto did{ id_from_s(dest) };
+				add_vertex(flows.g_, did);
+				flows.g_[vid].emplace_back(make_edge(vm.view()[0], op.view()[0], val.to_number<int>(), did));
+			}
 			auto [m2, last] = ctre::search<",([a-zA-Z]+)\\}">(ln);
-			i.emplace_back(u, 0, 0, last.to_string());
+			auto lid{ id_from_s(last) };
+			add_vertex(flows.g_, lid);
+			flows.g_[vid].emplace_back(make_edge(lid));
 		}
 		else
 			std::cout << "TILT " << ln << "\n";
 	}
+	flows.in_ = id_from_s("in");
+	flows.A_ = id_from_s("A");
+	flows.R_ = id_from_s("R");
 	while (std::getline(std::cin, ln))
 	{
 		if (auto [m3, x, m, a, s] = ctre::match<"\\{x=(\\d+),m=(\\d+),a=(\\d+),s=(\\d+)\\}">(ln); m3)
-		{
 			parts.emplace_back(x.to_number<int>(), m.to_number<int>(), a.to_number<int>(), s.to_number<int>(), false);
-		}
 		else
 			std::cout << "TILT " << ln << "\n";
 	}
@@ -78,66 +147,29 @@ auto get_input()
 
 bool applies(auto& r, auto& p)
 {
-	switch (r.c_)
-	{
-	case x:
-		if (r.op_ == '<' && p.x_ < r.val_)
-			return true;
-		if (r.op_ == '>' && p.x_ > r.val_)
-			return true;
-		break;
-	case m:
-		if (r.op_ == '<' && p.m_ < r.val_)
-			return true;
-		if (r.op_ == '>' && p.m_ > r.val_)
-			return true;
-		break;
-	case a:
-		if (r.op_ == '<' && p.a_ < r.val_)
-			return true;
-		if (r.op_ == '>' && p.a_ > r.val_)
-			return true;
-		break;
-	case s:
-		if (r.op_ == '<' && p.s_ < r.val_)
-			return true;
-		if (r.op_ == '>' && p.s_ > r.val_)
-			return true;
-		break;
-
-	}
-	return false;
+	return contains(r.x_, p.x_) &&
+		contains(r.m_, p.m_) &&
+		contains(r.a_, p.a_) &&
+		contains(r.s_, p.s_);
 }
 
 void apply_flows(auto const& flows, auto& p)
 {
-	auto flow = flows.find("in");
+	auto id{ flows.in_ };
 	while (1)
 	{
-		for (auto& r : (*flow).second)
+		for (auto& e : flows.g_[id])
 		{
-			if (r.c_ == u)
+			if (applies(e, p))
 			{
-				if (r.tgt_ == "A")
+				if (e.tgt_ == flows.A_)
 				{
 					p.accepted_ = true;
 					return;
 				}
-				if (r.tgt_ == "R")
+				if (e.tgt_ == flows.R_)
 					return;
-				flow = flows.find(r.tgt_);
-				break;
-			}
-			if (applies(r, p))
-			{
-				if (r.tgt_ == "A")
-				{
-					p.accepted_ = true;
-					return;
-				}
-				if (r.tgt_ == "R")
-					return;
-				flow = flows.find(r.tgt_);
+				id = e.tgt_;
 				break;
 			}
 		}
@@ -147,9 +179,7 @@ void apply_flows(auto const& flows, auto& p)
 auto pt1(auto const& flows, auto parts)
 {
 	for (auto& p : parts)
-	{
 		apply_flows(flows, p);
-	}
 	return std::accumulate(parts.begin(), parts.end(), 0LL,
 		[](auto s, auto& p)
 		{
@@ -159,10 +189,14 @@ auto pt1(auto const& flows, auto parts)
 		});
 }
 
+auto pt2(auto const& flows)
+{
+
+}
+
 int main()
 {
 	auto [flows, parts] = get_input();
-	std::cout << "got " << flows.size() << " flows.\n";
-	std::cout << "got " << parts.size() << " parts.\n";
+//	print(flows);
 	std::cout << "pt1 = " << pt1(flows, parts) << "\n";
 }
