@@ -3,57 +3,53 @@
 #include <vector>
 #include <map>
 #include <queue>
-#include <bitset>
 #include <algorithm>
 #include <numeric>
 
+//#include "boost/icl/discrete_interval.hpp"
+#include <boost/icl/closed_interval.hpp>
+#include <boost/icl/split_interval_set.hpp>
+//#include <boost/icl/interval_set.hpp>
+
 #include "ctre_inc.h"
 
-using bs_t = std::bitset<4000>;
+using namespace boost::icl;
 
 struct edge
 {
-	bs_t x_;
-	bs_t m_;
-	bs_t a_;
-	bs_t s_;
+	closed_interval<int> x_;
+	closed_interval<int> m_;
+	closed_interval<int> a_;
+	closed_interval<int> s_;
 	size_t tgt_;
 };
 
 edge make_edge(size_t tgt)
 {
-	edge e;
-	e.x_.set();
-	e.m_.set();
-	e.a_.set();
-	e.s_.set();
-	e.tgt_ = tgt;
-	return e;
+	return edge { { 1, 4000}, {1, 4000}, {1, 4000}, {1, 4000}, tgt };
 }
 
 edge make_edge(char xmas, char op, int val, size_t tgt)
 {
-	edge e = make_edge(tgt);
-	bs_t bs;
+	edge e{ { 1, 4000}, {1, 4000}, {1, 4000}, {1, 4000}, tgt };
+	closed_interval<int> ii{ 1, 4000 };
 	if (op == '<')
-		for (size_t n{0 }; n < val; ++n)
-			bs.set(n);
+		ii = construct<closed_interval<int>>(1, val);
 	else
-		for (size_t n{ size_t(val) }; n < e.x_.size(); ++n)
-			bs.set(n);
+		ii = construct<closed_interval<int>>(val + 1, 4000);
 	switch (xmas)
 	{
 	case 'x':
-		e.x_ = bs;
+		e.x_ = ii;
 		break;
 	case 'm':
-		e.m_ = bs;
+		e.m_ = ii;
 		break;
 	case 'a':
-		e.a_ = bs;
+		e.a_ = ii;
 		break;
 	case 's':
-		e.s_ = bs;
+		e.s_ = ii;
 		break;
 	}
 	return e;
@@ -74,8 +70,7 @@ void print(graph_t const& g)
 	{
 		std::cout << v << " : ";
 		for (auto& e : al)
-			std::cout << "( " << e.tgt_ << " - " << e.x_.count() <<
-				", " << e.m_.count() << ", " << e.a_.count() << ", " << e.s_.count() << ") ";
+			std::cout << e.tgt_ << ", ";
 		++v;
 		std::cout << "\n";
 	}
@@ -96,9 +91,11 @@ size_t id_from_s(std::string_view s)
 	auto ii{ id.find(std::string(s)) };
 	if (ii == id.end())
 	{
+//		std::cout << s << " -> " << id.size() << "\n";
 		id.emplace(std::string(s), id.size());
 		return id.size() - 1;
 	}
+//	std::cout << s << " -> " << (*ii).second << "\n";
 	return (*ii).second;
 }
 
@@ -152,10 +149,10 @@ auto get_input()
 
 bool applies(auto& r, auto& p)
 {
-	return r.x_.test( p.x_ - 1 ) &&
-		r.m_.test(p.m_ - 1) &&
-		r.a_.test(p.a_ - 1) &&
-		r.s_.test(p.s_ - 1);
+	return contains(r.x_, p.x_) &&
+		contains(r.m_, p.m_) &&
+		contains(r.a_, p.a_) &&
+		contains(r.s_, p.s_);
 }
 
 void apply_flows(auto const& flows, auto& p)
@@ -197,10 +194,10 @@ auto pt1(auto const& flows, auto parts)
 struct path
 {
 	size_t v_;
-	bs_t x_;
-	bs_t m_;
-	bs_t a_;
-	bs_t s_;
+	split_interval_set<closed_interval<int>> x_;
+	split_interval_set<closed_interval<int>> m_;
+	split_interval_set<closed_interval<int>> a_;
+	split_interval_set<closed_interval<int>> s_;
 };
 
 auto pt2(auto const& flows)
@@ -209,34 +206,46 @@ auto pt2(auto const& flows)
 	std::queue<path> q;
 	path pb;
 	pb.v_ = flows.in_;
-	pb.x_.flip();
-	pb.m_.flip();
-	pb.a_.flip();
-	pb.s_.flip();
+	pb.x_.insert(closed_interval<int>(1, 4000));
+	pb.m_.insert(closed_interval<int>(1, 4000));
+	pb.a_.insert(closed_interval<int>(1, 4000));
+	pb.s_.insert(closed_interval<int>(1, 4000));
 
 	q.push(pb);
 	while (!q.empty())
 	{
 		auto p{ q.front() };
 		q.pop();
-		for (auto& e : flows.g_[p.v_])
+		if (p.v_ == flows.A_)
 		{
-			path p2{ p };
-			p2.v_ = e.tgt_;
-			p2.x_ &= e.x_;
-			p2.m_ &= e.m_;
-			p2.a_ &= e.a_;
-			p2.s_ &= e.s_;
-			if (e.tgt_ == flows.A_)
+			auto ways{ 1LL };
+			for (auto& i : p.x_)
+				ways *= cardinality(i);
+			for (auto& i : p.m_)
+				ways *= cardinality(i);
+			for (auto& i : p.a_)
+				ways *= cardinality(i);
+			for (auto& i : p.s_)
+				ways *= cardinality(i);
+			answer += ways;
+			continue;
+		}
+		if (p.v_ != flows.R_)
+		{
+			for (auto& e : flows.g_[p.v_])
 			{
-				std::cout << "A " << p2.x_.count() << ", " << p2.m_.count() << ", " << p2.a_.count() << ", " << p2.s_.count() << "\n";
-				answer += p2.x_.count() * p2.m_.count() * p2.a_.count() * p2.s_.count();
-			}
-			else
-			if(e.tgt_ == flows.R_)
-				std::cout << "R " << p2.x_.count() << ", " << p2.m_.count() << ", " << p2.a_.count() << ", " << p2.s_.count() << "\n";
-			else
+				path p2;
+				p2.v_ = e.tgt_;
+#if 0
+				add_intersection(p2.x_, p.x_, e.x_);
+				add_intersection(p2.m_, p.m_, e.m_);
+				add_intersection(p2.a_, p.a_, e.a_);
+				add_intersection(p2.s_, p.s_, e.s_);
+#else
+				p2.s_ = p.s_ - e.s_;
+#endif
 				q.push(p2);
+			}
 		}
 	}
 	return answer;
@@ -245,13 +254,7 @@ auto pt2(auto const& flows)
 int main()
 {
 	auto [flows, parts] = get_input();
-	print(flows);
+//	print(flows);
 	std::cout << "pt1 = " << pt1(flows, parts) << "\n";
 	std::cout << "pt2 = " << pt2(flows) << "\n";
 }
-
-// test
-// 167409079868000
-// 15350040384000
-// 
-// 9950942942030237 too high

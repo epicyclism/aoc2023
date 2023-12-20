@@ -7,3 +7,7 @@ target_link_libraries(aoc19 PRIVATE ctre::ctre)
 add_executable(aoc19_o aoc19_o.cpp)
 target_include_directories(aoc19_o PUBLIC ../common)
 target_link_libraries(aoc19_o PRIVATE ctre::ctre)
+
+add_executable(aoc19_icl aoc19_icl.cpp)
+target_include_directories(aoc19_icl PUBLIC ../common)
+target_link_libraries(aoc19_icl PRIVATE ctre::ctre)
