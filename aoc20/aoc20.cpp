@@ -124,8 +124,8 @@ auto pt2(auto in)
 			auto p{ q.front() };
 			q.pop();
 			//			std::cout << p.from_ << " -> " << p.val_ << " " << p.dest_ << "\n";
-			if (p.dest_ == "rx" && p.val_ == 0)
-				return n;
+			if (p.dest_ == "rx")
+				std::cout << n << "\n";
 			auto& g{ in[p.dest_] };
 			switch (g.type_)
 			{
