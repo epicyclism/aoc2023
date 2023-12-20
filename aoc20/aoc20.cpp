@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <numeric>
 
 #include "ctre_inc.h"
 
@@ -111,23 +112,36 @@ auto pt1(auto in)
 
 auto pt2(auto in)
 {
+	std::map<std::string, long long> rxd;
+	std::string rxk{ (*in["rx"].min_.begin()).first };
 	std::queue<pulse> q;
 	pulse ps{ 0, "button", "roadcaster" };
 	int n = 1;
 	while(1)
 	{
-		if (n % 1000000 == 0)
-			std::cout << n << "\n";
 		q.push(ps);
 		while (!q.empty())
 		{
 			auto p{ q.front() };
 			q.pop();
 			//			std::cout << p.from_ << " -> " << p.val_ << " " << p.dest_ << "\n";
-			if (p.dest_ == "rx")
-				for (auto& s : in[p.from_].min_)
-					if(s.second == 1)
-						std::cout << s.first << " - " << n << "\n";
+			if (p.dest_ == rxk)
+			{
+				if (p.val_ == 1)
+				{
+					if (rxd[p.from_] == 0)
+					{
+						rxd[p.from_] = n;
+						if (rxd.size() == 4)
+						{
+							long long r{ 1ll };
+							for (auto& rxdi : rxd)
+								r = std::lcm(r, rxdi.second);
+							return r;
+						}
+					}
+				}
+			}
 			auto& g{ in[p.dest_] };
 			switch (g.type_)
 			{
@@ -158,7 +172,7 @@ auto pt2(auto in)
 		}
 		++n;
 	}
-	return -1;
+	return -1LL;
 }
 
 int main()
