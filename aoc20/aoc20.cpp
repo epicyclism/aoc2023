@@ -125,7 +125,9 @@ auto pt2(auto in)
 			q.pop();
 			//			std::cout << p.from_ << " -> " << p.val_ << " " << p.dest_ << "\n";
 			if (p.dest_ == "rx")
-				std::cout << n << "\n";
+				for (auto& s : in[p.from_].min_)
+					if(s.second == 1)
+						std::cout << s.first << " - " << n << "\n";
 			auto& g{ in[p.dest_] };
 			switch (g.type_)
 			{
