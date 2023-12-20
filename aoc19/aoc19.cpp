@@ -17,6 +17,10 @@ struct edge
 	bs_t m_;
 	bs_t a_;
 	bs_t s_;
+	bs_t xa_;
+	bs_t ma_;
+	bs_t aa_;
+	bs_t sa_;
 	size_t tgt_;
 };
 
@@ -27,6 +31,10 @@ edge make_edge(size_t tgt)
 	e.m_.set();
 	e.a_.set();
 	e.s_.set();
+	e.xa_.set();
+	e.ma_.set();
+	e.aa_.set();
+	e.sa_.set();
 	e.tgt_ = tgt;
 	return e;
 }
@@ -36,7 +44,7 @@ edge make_edge(char xmas, char op, int val, size_t tgt)
 	edge e = make_edge(tgt);
 	bs_t bs;
 	if (op == '<')
-		for (size_t n{0 }; n < val; ++n)
+		for (size_t n{0 }; n < val - 1; ++n)
 			bs.set(n);
 	else
 		for (size_t n{ size_t(val) }; n < e.x_.size(); ++n)
@@ -45,15 +53,23 @@ edge make_edge(char xmas, char op, int val, size_t tgt)
 	{
 	case 'x':
 		e.x_ = bs;
+		bs.flip();
+		e.xa_ = bs;
 		break;
 	case 'm':
 		e.m_ = bs;
+		bs.flip();
+		e.ma_ = bs;
 		break;
 	case 'a':
 		e.a_ = bs;
+		bs.flip();
+		e.aa_ = bs;
 		break;
 	case 's':
 		e.s_ = bs;
+		bs.flip();
+		e.sa_ = bs;
 		break;
 	}
 	return e;
@@ -205,6 +221,7 @@ struct path
 
 auto pt2(auto const& flows)
 {
+	auto rej{ 0LL };
 	auto answer{ 0LL };
 	std::queue<path> q;
 	path pb;
@@ -227,31 +244,24 @@ auto pt2(auto const& flows)
 			p2.m_ &= e.m_;
 			p2.a_ &= e.a_;
 			p2.s_ &= e.s_;
+			p.x_ &= e.xa_;
+			p.m_ &= e.ma_;
+			p.a_ &= e.aa_;
+			p.s_ &= e.sa_;
 			if (e.tgt_ == flows.A_)
-			{
-				std::cout << "A " << p2.x_.count() << ", " << p2.m_.count() << ", " << p2.a_.count() << ", " << p2.s_.count() << "\n";
 				answer += p2.x_.count() * p2.m_.count() * p2.a_.count() * p2.s_.count();
-			}
 			else
-			if(e.tgt_ == flows.R_)
-				std::cout << "R " << p2.x_.count() << ", " << p2.m_.count() << ", " << p2.a_.count() << ", " << p2.s_.count() << "\n";
-			else
-				q.push(p2);
+				if (e.tgt_ != flows.R_)
+					q.push(p2);
 		}
 	}
+
 	return answer;
 }
 
 int main()
 {
 	auto [flows, parts] = get_input();
-	print(flows);
 	std::cout << "pt1 = " << pt1(flows, parts) << "\n";
 	std::cout << "pt2 = " << pt2(flows) << "\n";
 }
-
-// test
-// 167409079868000
-// 15350040384000
-// 
-// 9950942942030237 too high
