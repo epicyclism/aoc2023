@@ -139,6 +139,7 @@ auto pt1(auto const& in)
 	stdex::mdspan md(v.data(), my + 3, mx + 3);
 	for (auto& p : in)
 		md(p.y_ + 1, p.x_ + 1) = '#';
+	std::cout << "hash count = " << std::count(v.begin(), v.end(), '#') << "\n";
 //	print(md);
 	flood_fill(md);
 //	print(md);
@@ -152,5 +153,3 @@ int main()
 	std::cout << "got " << in.size() << " pts.\n";
 	std::cout << "pt1 = " << pt1(in) << "\n";
 }
-
-// 22267 too low
