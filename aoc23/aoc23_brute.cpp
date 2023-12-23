@@ -61,39 +61,21 @@ auto pt1(auto const& in)
 			return in.v_[from] == '.';
 		});
 
+	std::stack<std::pair<size_t, std::set<size_t>>> s ;
+	s.push({ in.start_, {} });
 	size_t longest{ 0 };
-	struct path
+	while (!s.empty())
 	{
-		size_t v_;
-		std::vector<bool> pth_;
-	};
-	std::queue<path> q;
-	path p;
-	p.v_ = in.start_;
-	p.pth_.resize(g.size());
-	q.push(p);
-
-	while (!q.empty())
-	{
-		auto e{ q.front() };
-		q.pop();
-		if (!e.pth_[e.v_])
+		auto v{ s.top() };
+		s.pop();
+		if (v.first == in.finish_ && longest < v.second.size())
+			longest = v.second.size();
+		if (!v.second.contains(v.first))
 		{
-			if (e.v_ == in.finish_)
+			v.second.insert(v.first);
+			for (auto n : g[v.first])
 			{
-				auto cnt = std::count(e.pth_.begin(), e.pth_.end(), true);
-				if (cnt > longest)
-					longest = cnt;
-			}
-			e.pth_[e.v_] = true;
-			for (auto n : g[e.v_])
-			{
-				if (!e.pth_[n])
-				{
-					path p(e);
-					p.v_ = n;
-					q.push(p);
-				}
+				s.push({ n, v.second });
 			}
 		}
 	}
@@ -110,39 +92,21 @@ auto pt2(auto const& in)
 			return true;
 		});
 
+	std::stack<std::pair<size_t, std::set<size_t>>> s;
+	s.push({ in.start_, {} });
 	size_t longest{ 0 };
-	struct path
+	while (!s.empty())
 	{
-		size_t v_;
-		std::vector<bool> pth_;
-	};
-	std::queue<path> q;
-	path p;
-	p.v_ = in.start_;
-	p.pth_.resize(g.size());
-	q.push(p);
-
-	while (!q.empty())
-	{
-		auto e{ q.front() };
-		q.pop();
-		if (!e.pth_[e.v_])
+		auto v{ s.top() };
+		s.pop();
+		if (v.first == in.finish_ && longest < v.second.size())
+			longest = v.second.size();
+		if (!v.second.contains(v.first))
 		{
-			if (e.v_ == in.finish_)
+			v.second.insert(v.first);
+			for (auto n : g[v.first])
 			{
-				auto cnt = std::count(e.pth_.begin(), e.pth_.end(), true);
-				if (cnt > longest)
-					longest = cnt;
-			}
-			e.pth_[e.v_] = true;
-			for (auto n : g[e.v_])
-			{
-				if (!e.pth_[n])
-				{
-					path p(e);
-					p.v_ = n;
-					q.push(p);
-				}
+				s.push({ n, v.second });
 			}
 		}
 	}
