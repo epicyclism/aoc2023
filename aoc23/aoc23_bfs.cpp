@@ -91,12 +91,12 @@ auto pt1(auto const& in)
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
-				if (!e.pth_[n] && cache[{e.v_, n}] < e.cnt_)
+				if (!e.pth_[n] /*&& cache[{e.v_, n}] < e.cnt_*/)
 				{
 					path p(e);
 					p.v_ = n;
 					q.push(p);
-					cache[{e.v_, n}] = e.cnt_;
+//					cache[{e.v_, n}] = e.cnt_;
 				}
 			}
 		}
@@ -144,12 +144,12 @@ auto pt2(auto const& in)
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
-				if (!e.pth_[n] && cache[{e.v_, n}] <= e.cnt_)
+				if (!e.pth_[n] /*&& cache[{e.v_, n}] <= e.cnt_*/)
 				{
 					path p(e);
 					p.v_ = n;
 					q.push(p);
-					cache[{e.v_, n}] = e.cnt_;
+//					cache[{e.v_, n}] = e.cnt_;
 				}
 			}
 		}

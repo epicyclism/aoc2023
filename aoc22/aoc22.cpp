@@ -143,14 +143,18 @@ auto pt12(auto in)
 			for (auto bs : lsupports[b])
 			{
 				std::erase(lsupportedby[bs], b);
-				q.push(bs);
+				if(lsupportedby[bs].empty())
+				{
+					q.push(bs);
+					++cnt_other;
+				}
 			}
 		}
-		std::cout << n << " - ";
-		for (auto& v : lsupportedby)
-			std::cout << v.size() << " ";
-		std::cout << "\n";
-		cnt_other += std::count_if(lsupportedby.begin(), lsupportedby.end(), [](auto& v) { return v.empty(); });
+//		std::cout << n << " - ";
+//		for (auto& v : lsupportedby)
+//			std::cout << v.size() << " ";
+//		std::cout << "\n";
+//		cnt_other += std::count_if(lsupportedby.begin() + 1, lsupportedby.end(), [](auto& v) { return v.empty(); }) ;
 	}
 	return std::make_pair(can_disintegrate, cnt_other);
 }
@@ -164,3 +168,4 @@ int main()
 	std::cout << "pt1 = " << pt1 << "\n";
 	std::cout << "pt2 = " << pt2 << "\n";
 }
+// 128505 too high

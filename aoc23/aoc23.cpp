@@ -5,6 +5,7 @@
 #include <map>
 #include <stack>
 #include <algorithm>
+#include <limits>
 
 #include "graph.h"
 
@@ -35,48 +36,78 @@ auto get_input()
 	return g;
 }
 
+void topological_sort(int v, std::vector<bool>& visited, std::stack<int>& s, auto const& g)
+{
+	visited[v] = true;
+	for(auto e: g[v])
+	{
+		if(!visited[e])
+			topological_sort(e, visited, s, g);
+	}
+	s.push(v);
+}
+
+void print(std::vector<char> v, size_t stride, std::vector<int> const& p, int fin)
+{
+	while(fin != -1)
+	{
+		v[fin] = 'O';
+		fin = p[fin];
+	}
+
+	int cnt { 0};
+	for(auto c: v)
+	{
+		std::cout << c ;
+		++cnt;
+		if( cnt == stride)
+		{
+			std::cout << "\n";
+			cnt = 0;
+		}
+	}
+	std::cout << "\n";
+}
+
 template<typename V> auto ptN(auto const& in, V v)
 {
 	grid_direct g(in.v_, in.stride_, v);
 
-	size_t longest{ 0 };
-	using pq_t =
-		struct
+	std::vector<int> distance( g.size(), std::numeric_limits<int>::lowest());
+	std::vector<bool> visited(g.size(), false);
+	std::stack<int> s;
+	for(int n{0}; n < g.size(); ++n)
+		if(!visited[n])
+			topological_sort(n, visited, s, g);
+	
+	std::vector<int> prev(g.size(), -1);
+	distance[in.start_] = 0;
+	while(!s.empty())
 	{
-		size_t v_;
-		size_t w_;
-		std::vector<bool> seen_;
-	};
-	auto pq_t_cmp = [](auto& l, auto& r) { return l.w_ > r.w_; };
-	std::priority_queue<pq_t, std::vector<pq_t>, decltype(pq_t_cmp)> q(pq_t_cmp);
-	pq_t pqt;
-	pqt.v_ = in.start_;
-	pqt.w_ = g.size();
-	pqt.seen_.resize(g.size());
-	q.push(pqt);
-	std::vector<int> distances(g.size(), g.size());
-	while (!q.empty())
-	{
-		auto p = q.top(); q.pop();
-
-		for (auto e : g[p.v_])
-		{
-			if (!p.seen_[e] && distances[e] > distances[p.v_] - 1 )
+		auto u { s.top()};
+		s.pop();
+		if(distance[u] != std::numeric_limits<int>::lowest())
+			for(auto n: g[u])
 			{
-				p.seen_[e] = true;
-				p.v_ = e;
-				p.w_ -= 1;
-				distances[e] = distances[p.v_] - 1;
-				q.push(p);
+				if(distance[n] < distance[u] + 1)
+				{
+					distance[n] = distance[u] + 1;
+					prev[n] = u;
+				}
 			}
-		}
 	}
-	return g.size() - distances[in.finish_];
+
+//	for(int n = 0; n < distance.size(); ++n)
+//		if(distance[n] >= 0)
+//		std::cout << n << " " << distance[n] << "\n";
+	print(in.v_, in.stride_, prev, in.finish_);
+	return distance[in.finish_];
 }
 
 int main()
 {
 	auto in{ get_input() };
+	std::cout << "cells = " << in.v_.size() << ", start = " << in.start_ << ", finish = " << in.finish_ << "\n";
 	std::cout << "pt1 = " << ptN(in, [&](auto from, auto to)
 		{
 			if (in.v_[to] == '#')
@@ -101,7 +132,7 @@ int main()
 		}) << "\n";
 	std::cout << "pt2 = " << ptN(in, [&](auto from, auto to)
 		{
-			return in.v_[to] != '#';
+			return !(in.v_[from] == '#' || in.v_[to] == '#')   ;
 		}) << "\n";
 }
 
