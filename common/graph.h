@@ -193,6 +193,7 @@ public:
 // plain grid wrap for mazes etc.
 // provide a fn to determine whether a path exists from adjacent otherwise valid nodes.
 // fn of form bool V(T from, T to)
+// where from and to are grid cell contents
 //
 template<typename T, typename V> class grid
 {
@@ -217,6 +218,43 @@ public:
             rv.emplace_back(v - stride_);
         // down
         if (v < data_.size() - stride_ && vp_(data_[v], data_[v + stride_]))
+            rv.emplace_back(v + stride_);
+        return rv;
+    }
+    size_t size() const
+    {
+        return data_.size();
+    }
+};
+
+// plain grid wrap for mazes etc.
+// provide a fn to determine whether a path exists from adjacent otherwise valid nodes.
+// fn of form bool V(T from, T to)
+// where from and to are vertex ids.
+//
+template<typename T, typename V> class grid_direct
+{
+private:
+    const std::vector<T>& data_;
+    const size_t stride_;
+    const V vp_;
+public:
+    grid_direct(std::vector<T> const& d, size_t s, V vp) : data_{ d }, stride_{ s }, vp_{ vp }
+    {}
+    std::vector<vertex_id_t> operator[](vertex_id_t v) const
+    {
+        std::vector<vertex_id_t> rv;
+        // left
+        if (v % stride_ != 0 && vp_(v, v - 1))
+            rv.emplace_back(v - 1);
+        // right
+        if (v % stride_ != stride_ - 1 && vp_( v, v + 1))
+            rv.emplace_back(v + 1);
+        // up
+        if (v > stride_ && vp_(v, v - stride_))
+            rv.emplace_back(v - stride_);
+        // down
+        if (v < data_.size() - stride_ && vp_(v, v + stride_))
             rv.emplace_back(v + stride_);
         return rv;
     }

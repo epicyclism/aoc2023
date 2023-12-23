@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include <map>
 
@@ -39,28 +40,19 @@ auto get_input()
 		else
 			std::cout << "TILT { " << ln << " }\n";
 	}
-	// sort to z
 	std::ranges::sort(v, [](auto& l, auto& r) { return l.l_.z_ < r.l_.z_; });
 
 	return v;
 }
 
-auto pt1(auto in)
+auto pt12(auto in)
 {
 	// drop all
 	// x,y to min z for this point
 	std::map<std::pair<int, int>, int> minz;
 	for (auto& b : in)
 	{
-		int minz_val{ 0 };
-		for (int x{ b.l_.x_ }; x <= b.r_.x_; ++x)
-		{
-			for (int y{ b.l_.y_ }; y <= b.r_.y_; ++y)
-			{
-				if (minz[{x, y}] >= minz_val)
-					minz_val = minz[{x, y}] + 1;
-			}
-		}
+		int minz_val{ 1 };
 		for (int x{ b.l_.x_ }; x <= b.r_.x_; ++x)
 		{
 			for (int y{ b.l_.y_ }; y <= b.r_.y_; ++y)
@@ -71,11 +63,11 @@ auto pt1(auto in)
 		}
 		b.r_.z_ = minz_val + b.r_.z_ - b.l_.z_;
 		b.l_.z_ = minz_val;
+		for (int x{ b.l_.x_ }; x <= b.r_.x_; ++x)
+			for (int y{ b.l_.y_ }; y <= b.r_.y_; ++y)
+				 minz[{x, y}] = b.r_.z_ ;
 	}
-	std::cout << "\n";
-	for (auto& b : in)
-		std::cout << b.l_.x_ << ", " << b.l_.y_ << ", " << b.l_.z_ << " - " << b.r_.x_ << ", " << b.r_.y_ << ", " << b.r_.z_ << "\n";
-#if 0
+	// mark all occupied cubes with brick id
 	std::map<pos, size_t> cubes;
 	for (size_t n{ 0 }; n < in.size(); ++n)
 	{
@@ -85,9 +77,82 @@ auto pt1(auto in)
 				for (int z{ b.l_.z_ }; z <= b.r_.z_; ++z)
 					cubes[{x, y, z}] = n;
 	}
-
+	// for each brick find bricks it supports
+	std::vector<std::vector<size_t>> supports(in.size());
+	std::vector<std::vector<size_t>> supportedby(in.size());
+	size_t ind{ 0 };
+	for (auto& b : in)
+	{
+		int z_up{ b.r_.z_ + 1 };
+		for(int x { b.l_.x_}; x <= b.r_.x_; ++x)
+			for (int y{ b.l_.y_ }; y <= b.r_.y_; ++y)
+			{
+				auto i = cubes.find({ x, y, z_up });
+				if (i != cubes.end())
+				{
+					supports[ind].push_back((*i).second);
+					supportedby[(*i).second].push_back( ind);
+				}
+			}
+		++ind;
+	}
+	for (auto& s : supports)
+	{
+		std::ranges::sort(s);
+		auto ne = std::unique(s.begin(), s.end());
+		s.erase(ne, s.end());
+	}
+	for (auto& s : supportedby)
+	{
+		std::ranges::sort(s);
+		auto ne = std::unique(s.begin(), s.end());
+		s.erase(ne, s.end());
+	}
+#if 0
+	for (int n{ 0 }; n < in.size(); ++n)
+	{
+		std::cout << "block " << n << " supports ";
+		for (auto bs : supports[n])
+			std::cout << bs << " ";
+		std::cout << " and is supported by ";
+		for (auto bs : supportedby[n])
+			std::cout << bs << " ";
+		std::cout << "\n";
+	}
 #endif
-	return 0;
+	int can_disintegrate{ 0 };
+	for (int n{ 0 }; n < in.size(); ++n)
+	{
+		bool can_d{ true };
+		for (auto under : supports[n])
+			if (supportedby[under].size() == 1)
+				can_d = false;
+		can_disintegrate += can_d;
+	}
+	int64_t cnt_other{ 0 };
+	for (int n{ 0 }; n < in.size(); ++n)
+	{
+		auto lsupports{ supports };
+		auto lsupportedby{ supportedby };
+		std::queue<int> q;
+		q.push(n);
+		while(!q.empty())
+		{ 
+			auto b = q.front();
+			q.pop();
+			for (auto bs : lsupports[b])
+			{
+				std::erase(lsupportedby[bs], b);
+				q.push(bs);
+			}
+		}
+		std::cout << n << " - ";
+		for (auto& v : lsupportedby)
+			std::cout << v.size() << " ";
+		std::cout << "\n";
+		cnt_other += std::count_if(lsupportedby.begin(), lsupportedby.end(), [](auto& v) { return v.empty(); });
+	}
+	return std::make_pair(can_disintegrate, cnt_other);
 }
 
 int main()
@@ -95,5 +160,7 @@ int main()
 	auto in{ get_input() };
 	std::cout << "got " << in.size() << " bricks.\n";
 
-	std::cout << "pt1 = " << pt1(in) << "\n";
+	auto [pt1, pt2] = pt12(in);
+	std::cout << "pt1 = " << pt1 << "\n";
+	std::cout << "pt2 = " << pt2 << "\n";
 }
