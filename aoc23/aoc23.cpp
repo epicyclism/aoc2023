@@ -65,26 +65,30 @@ auto pt1(auto const& in)
 	struct path
 	{
 		size_t v_;
+		size_t cnt_;
 		std::vector<bool> pth_;
 	};
+	std::map<size_t, size_t> cache;
 	std::queue<path> q;
 	path p;
 	p.v_ = in.start_;
+	p.cnt_ = 1;
 	p.pth_.resize(g.size());
 	q.push(p);
-
 	while (!q.empty())
 	{
 		auto e{ q.front() };
 		q.pop();
-		if (!e.pth_[e.v_])
+		if (!e.pth_[e.v_] /* && e.cnt_ > cache[e.v_]*/)
 		{
 			if (e.v_ == in.finish_)
 			{
-				auto cnt = std::count(e.pth_.begin(), e.pth_.end(), true);
-				if (cnt > longest)
-					longest = cnt;
+				std::cout << e.cnt_ << "\n";
+				if (e.cnt_ > longest)
+					longest = e.cnt_;
 			}
+			cache[e.v_] = e.cnt_;
+			++e.cnt_;
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
@@ -114,26 +118,30 @@ auto pt2(auto const& in)
 	struct path
 	{
 		size_t v_;
+		size_t cnt_;
 		std::vector<bool> pth_;
 	};
 	std::queue<path> q;
+	std::map<size_t, size_t> cache;
 	path p;
 	p.v_ = in.start_;
+	p.cnt_ = 1;
 	p.pth_.resize(g.size());
 	q.push(p);
-
 	while (!q.empty())
 	{
 		auto e{ q.front() };
 		q.pop();
-		if (!e.pth_[e.v_])
+		if (!e.pth_[e.v_]  && e.cnt_ >= cache[e.v_])
 		{
 			if (e.v_ == in.finish_)
 			{
-				auto cnt = std::count(e.pth_.begin(), e.pth_.end(), true);
-				if (cnt > longest)
-					longest = cnt;
+				std::cout << e.cnt_ << "\n";
+				if (e.cnt_ > longest)
+					longest = e.cnt_;
 			}
+			cache[e.v_] = e.cnt_;
+			++e.cnt_;
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
@@ -155,3 +163,5 @@ int main()
 	std::cout << "pt1 = " << pt1(in) << "\n";
 	std::cout << "pt2 = " << pt2(in) << "\n";
 }
+
+// 4914 too low
