@@ -35,10 +35,49 @@ auto get_input()
 	return g;
 }
 
-auto pt1(auto const& in)
+template<typename V> auto ptN(auto const& in, V v)
 {
-	grid_direct g(in.v_, in.stride_,
-		[&](auto from, auto to)
+	grid_direct g(in.v_, in.stride_, v);
+
+	size_t longest{ 0 };
+	using pq_t =
+		struct
+	{
+		size_t v_;
+		size_t w_;
+		std::vector<bool> seen_;
+	};
+	auto pq_t_cmp = [](auto& l, auto& r) { return l.w_ > r.w_; };
+	std::priority_queue<pq_t, std::vector<pq_t>, decltype(pq_t_cmp)> q(pq_t_cmp);
+	pq_t pqt;
+	pqt.v_ = in.start_;
+	pqt.w_ = g.size();
+	pqt.seen_.resize(g.size());
+	q.push(pqt);
+	std::vector<int> distances(g.size(), g.size());
+	while (!q.empty())
+	{
+		auto p = q.top(); q.pop();
+
+		for (auto e : g[p.v_])
+		{
+			if (!p.seen_[e] && distances[e] > distances[p.v_] - 1 )
+			{
+				p.seen_[e] = true;
+				p.v_ = e;
+				p.w_ -= 1;
+				distances[e] = distances[p.v_] - 1;
+				q.push(p);
+			}
+		}
+	}
+	return g.size() - distances[in.finish_];
+}
+
+int main()
+{
+	auto in{ get_input() };
+	std::cout << "pt1 = " << ptN(in, [&](auto from, auto to)
 		{
 			if (in.v_[to] == '#')
 				return false;
@@ -59,109 +98,12 @@ auto pt1(auto const& in)
 			if (in.v_[to] == '<')
 				return from == to + 1;
 			return in.v_[from] == '.';
-		});
-
-	size_t longest{ 0 };
-	struct path
-	{
-		size_t v_;
-		size_t cnt_;
-		std::vector<bool> pth_;
-	};
-	std::map<size_t, size_t> cache;
-	std::queue<path> q;
-	path p;
-	p.v_ = in.start_;
-	p.cnt_ = 1;
-	p.pth_.resize(g.size());
-	q.push(p);
-	while (!q.empty())
-	{
-		auto e{ q.front() };
-		q.pop();
-		if (!e.pth_[e.v_] /* && e.cnt_ > cache[e.v_]*/)
+		}) << "\n";
+	std::cout << "pt2 = " << ptN(in, [&](auto from, auto to)
 		{
-			if (e.v_ == in.finish_)
-			{
-				std::cout << e.cnt_ << "\n";
-				if (e.cnt_ > longest)
-					longest = e.cnt_;
-			}
-			cache[e.v_] = e.cnt_;
-			++e.cnt_;
-			e.pth_[e.v_] = true;
-			for (auto n : g[e.v_])
-			{
-				if (!e.pth_[n])
-				{
-					path p(e);
-					p.v_ = n;
-					q.push(p);
-				}
-			}
-		}
-	}
-	return longest;
-}
-
-auto pt2(auto const& in)
-{
-	grid_direct g(in.v_, in.stride_,
-		[&](auto from, auto to)
-		{
-			if (in.v_[to] == '#')
-				return false;
-			return true;
-		});
-
-	size_t longest{ 0 };
-	struct path
-	{
-		size_t v_;
-		size_t cnt_;
-		std::vector<bool> pth_;
-	};
-	std::queue<path> q;
-	std::map<size_t, size_t> cache;
-	path p;
-	p.v_ = in.start_;
-	p.cnt_ = 1;
-	p.pth_.resize(g.size());
-	q.push(p);
-	while (!q.empty())
-	{
-		auto e{ q.front() };
-		q.pop();
-		if (!e.pth_[e.v_]  && e.cnt_ >= cache[e.v_])
-		{
-			if (e.v_ == in.finish_)
-			{
-				std::cout << e.cnt_ << "\n";
-				if (e.cnt_ > longest)
-					longest = e.cnt_;
-			}
-			cache[e.v_] = e.cnt_;
-			++e.cnt_;
-			e.pth_[e.v_] = true;
-			for (auto n : g[e.v_])
-			{
-				if (!e.pth_[n])
-				{
-					path p(e);
-					p.v_ = n;
-					q.push(p);
-				}
-			}
-		}
-	}
-	return longest;
-}
-
-int main()
-{
-	auto in{ get_input() };
-	std::cout << "pt1 = " << pt1(in) << "\n";
-	std::cout << "pt2 = " << pt2(in) << "\n";
+			return in.v_[to] != '#';
+		}) << "\n";
 }
 
 // 4914 too low
+// 6186 too low
