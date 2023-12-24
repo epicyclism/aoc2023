@@ -11,7 +11,7 @@ def parse_input(filename):
         return [
             tuple(
                 [
-                    tuple([int(num) for num in nums.split(",")])
+                    tuple([ for num in nums.split(",")])
                     for nums in row.split("@")
                 ]
             )
