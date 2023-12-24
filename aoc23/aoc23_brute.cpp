@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <set>
-#include <map>
 #include <stack>
 #include <algorithm>
 
@@ -35,10 +33,38 @@ auto get_input()
 	return g;
 }
 
-auto pt1(auto const& in)
+template<typename V> auto ptN(auto const& in, V v)
 {
-	grid_direct g(in.v_, in.stride_,
-		[&](auto from, auto to)
+	grid_direct g(in.v_, in.stride_, v);
+
+	std::stack<std::pair<size_t, std::vector<bool>>> s ;
+	std::pair<size_t, std::vector<bool>> st;
+	st.first = in.start_;
+	st.second.resize(g.size());
+	s.push(st);
+	size_t longest{ 0 };
+	while (!s.empty())
+	{
+		auto v{ s.top() };
+		s.pop();
+		if (v.first == in.finish_ && longest < std::count(v.second.begin(), v.second.end(), true))
+			longest = std::count(v.second.begin(), v.second.end(), true);
+		if (!v.second[v.first])
+		{
+			v.second[v.first] = true;
+			for (auto n : g[v.first])
+			{
+				s.push({ n, v.second });
+			}
+		}
+	}
+	return longest;
+}
+
+int main()
+{
+	auto in{ get_input() };
+	std::cout << "pt1 = " << ptN(in, [&](auto from, auto to)
 		{
 			if (in.v_[to] == '#')
 				return false;
@@ -59,63 +85,9 @@ auto pt1(auto const& in)
 			if (in.v_[to] == '<')
 				return from == to + 1;
 			return in.v_[from] == '.';
-		});
-
-	std::stack<std::pair<size_t, std::set<size_t>>> s ;
-	s.push({ in.start_, {} });
-	size_t longest{ 0 };
-	while (!s.empty())
-	{
-		auto v{ s.top() };
-		s.pop();
-		if (v.first == in.finish_ && longest < v.second.size())
-			longest = v.second.size();
-		if (!v.second.contains(v.first))
+		}) << "\n";
+	std::cout << "pt2 = " << ptN(in, [&](auto from, auto to)
 		{
-			v.second.insert(v.first);
-			for (auto n : g[v.first])
-			{
-				s.push({ n, v.second });
-			}
-		}
-	}
-	return longest;
-}
-
-auto pt2(auto const& in)
-{
-	grid_direct g(in.v_, in.stride_,
-		[&](auto from, auto to)
-		{
-			if (in.v_[to] == '#')
-				return false;
-			return true;
-		});
-
-	std::stack<std::pair<size_t, std::set<size_t>>> s;
-	s.push({ in.start_, {} });
-	size_t longest{ 0 };
-	while (!s.empty())
-	{
-		auto v{ s.top() };
-		s.pop();
-		if (v.first == in.finish_ && longest < v.second.size())
-			longest = v.second.size();
-		if (!v.second.contains(v.first))
-		{
-			v.second.insert(v.first);
-			for (auto n : g[v.first])
-			{
-				s.push({ n, v.second });
-			}
-		}
-	}
-	return longest;
-}
-
-int main()
-{
-	auto in{ get_input() };
-	std::cout << "pt1 = " << pt1(in) << "\n";
-	std::cout << "pt2 = " << pt2(in) << "\n";
+			return !(in.v_[from] == '#' || in.v_[to] == '#')   ;
+		}) << "\n";
 }

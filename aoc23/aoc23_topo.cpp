@@ -36,75 +36,49 @@ auto get_input()
 	return g;
 }
 
-struct edge_t
+void topological_sort(int v, std::vector<bool>& visited, std::stack<int>& s, auto const& g)
 {
-	size_t v_;
-	size_t w_;
-	edge_t(size_t v, size_t w) : v_{v}, w_{w}
-	{}
-};
-
-using gg_t = std::map<size_t, std::vector<edge_t>>;
-
-template<typename V> gg_t graph_from_grid(auto const& in, V v)
-{
-	grid_direct g(in.v_, in.stride_, v);
-	gg_t gg;
-	struct pth
+	visited[v] = true;
+	for(auto e: g[v])
 	{
-		size_t v_;
-		size_t vf_;
-		size_t w_;
-	};
-	std::vector<bool> visited(g.size(), false);
-	std::queue<pth> q;
-    q.push({in.start_, in.start_, 0});
-    while (!q.empty())
-    {
-        auto u = q.front(); q.pop();
-		auto al { g[u.v_]};
-//		std::cout << "( " << al.size() << " }\n";
-		if(al.size() < 3)
-		{
-			for(auto e: al)
-			{
-				if (!visited[e])
-				{
-					visited[e] = true;
-					++u.w_;
-					u.v_ = e;
-					q.push(u);
-				}
-			}
-		}
-		else
-		{
-			gg[u.vf_].push_back(edge_t(u.v_, u.w_));
-			u.vf_ = u.v_;
-			u.w_ = 1;
-			for (auto e : al)
-			{
-				if (!visited[e])
-				{
-					visited[e] = true;
-					u.v_ = e;
-					q.push(u);
-				}
-			}
-		}
-    }
-
-	return gg;
+		if(!visited[e])
+			topological_sort(e, visited, s, g);
+	}
+	s.push(v);
 }
 
 template<typename V> auto ptN(auto const& in, V v)
 {
-	auto gg { graph_from_grid( in, v)};
-	std::cout << gg.size() << "\n";
-	for(auto& v: gg[in.start_])
-		std::cout << v.v_ << ", " << v.w_ << "\n";
+	grid_direct g(in.v_, in.stride_, v);
 
-	return 0;
+	std::vector<int> distance( g.size(), std::numeric_limits<int>::lowest());
+	std::vector<bool> visited(g.size(), false);
+	std::stack<int> s;
+	for(int n{0}; n < g.size(); ++n)
+		if(!visited[n])
+			topological_sort(n, visited, s, g);
+	
+	std::vector<int> prev(g.size(), -1);
+	distance[in.start_] = 0;
+	while(!s.empty())
+	{
+		auto u { s.top()};
+		s.pop();
+		if(distance[u] != std::numeric_limits<int>::lowest())
+		{
+			auto const& vv{ g[u]};
+			for(auto n: vv)
+			{
+				if(distance[n] < distance[u] + 1)
+				{
+					distance[n] = distance[u] + 1;
+					prev[n] = u;
+				}
+			}
+		}
+	}
+
+	return distance[in.finish_];
 }
 
 int main()
@@ -138,3 +112,6 @@ int main()
 			return !(in.v_[from] == '#' || in.v_[to] == '#')   ;
 		}) << "\n";
 }
+
+// 4914 too low
+// 6186 too low

@@ -256,7 +256,7 @@ public:
         // down
         if (v < data_.size() - stride_ && vp_(v, v + stride_))
             rv.emplace_back(v + stride_);
-        return rv;
+     return rv;
     }
     size_t size() const
     {

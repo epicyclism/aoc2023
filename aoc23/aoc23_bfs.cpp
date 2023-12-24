@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <set>
-#include <map>
 #include <stack>
 #include <algorithm>
 
@@ -68,11 +66,10 @@ auto pt1(auto const& in)
 		size_t cnt_;
 		std::vector<bool> pth_;
 	};
-	std::map<std::pair<size_t, size_t>, size_t> cache;
 	std::queue<path> q;
 	path p;
 	p.v_ = in.start_;
-	p.cnt_ = 1;
+	p.cnt_ = 0;
 	p.pth_.resize(g.size());
 	q.push(p);
 	while (!q.empty())
@@ -83,7 +80,6 @@ auto pt1(auto const& in)
 		{
 			if (e.v_ == in.finish_)
 			{
-				std::cout << e.cnt_ << "\n";
 				if (e.cnt_ > longest)
 					longest = e.cnt_;
 			}
@@ -91,17 +87,16 @@ auto pt1(auto const& in)
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
-				if (!e.pth_[n] /*&& cache[{e.v_, n}] < e.cnt_*/)
+				if (!e.pth_[n])
 				{
 					path p(e);
 					p.v_ = n;
 					q.push(p);
-//					cache[{e.v_, n}] = e.cnt_;
 				}
 			}
 		}
 	}
-	return longest;
+	return longest ;
 }
 
 auto pt2(auto const& in)
@@ -121,11 +116,10 @@ auto pt2(auto const& in)
 		size_t cnt_;
 		std::vector<bool> pth_;
 	};
-	std::map<std::pair<size_t, size_t>, size_t> cache;
 	std::queue<path> q;
 	path p;
 	p.v_ = in.start_;
-	p.cnt_ = 1;
+	p.cnt_ = 0;
 	p.pth_.resize(g.size());
 	q.push(p);
 	while (!q.empty())
@@ -136,7 +130,6 @@ auto pt2(auto const& in)
 		{
 			if (e.v_ == in.finish_)
 			{
-				std::cout << e.cnt_ << "\n";
 				if (e.cnt_ > longest)
 					longest = e.cnt_;
 			}
@@ -144,12 +137,11 @@ auto pt2(auto const& in)
 			e.pth_[e.v_] = true;
 			for (auto n : g[e.v_])
 			{
-				if (!e.pth_[n] /*&& cache[{e.v_, n}] <= e.cnt_*/)
+				if (!e.pth_[n])
 				{
 					path p(e);
 					p.v_ = n;
 					q.push(p);
-//					cache[{e.v_, n}] = e.cnt_;
 				}
 			}
 		}
