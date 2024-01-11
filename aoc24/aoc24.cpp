@@ -3,7 +3,9 @@
 #include <vector>
 #include <optional>
 #include <algorithm>
-
+#if defined (USE_Z3)
+#include <z3++.h>
+#endif
 #include "ctre_inc.h"
 
 using int_t = long long;
@@ -98,41 +100,47 @@ auto pt1(auto const& in)
 
 auto pt2(auto const& in)
 {
-	std::cout << "\n";
-	for(int n { 0}; n < 3; ++n)
+#if defined (USE_Z3)
+	z3::context c;
+	z3::expr  x = c.int_const("x");
+	z3::expr  y = c.int_const("y");
+	z3::expr  z = c.int_const("z");
+	z3::expr dx = c.int_const("dx");
+	z3::expr dy = c.int_const("dy");
+	z3::expr dz = c.int_const("dz");
+	z3::expr t[] = { c.int_const("t0"), c.int_const("t1"), c.int_const("t2")};
+
+	z3::solver s(c);
+
+	for(int n { 0 }; n < 3; ++n)
 	{
-		if ( in[n].dxyz_.x_ < 0)
-			std::cout << in[n].xyz_.x_ << " - " << -1 * in[n].dxyz_.x_ << " * t" << n << " - x - t" << n << " * X = 0, ";
-		else
-			std::cout << in[n].xyz_.x_ << " + " << in[n].dxyz_.x_ << " * t" << n << " - x - t" << n << " * X = 0, ";
-		if ( in[n].dxyz_.y_ < 0)
-			std::cout << in[n].xyz_.y_ << " - " << -1 * in[n].dxyz_.y_ << " * t" << n << " - y - t" << n << " * Y = 0, ";
-		else
-			std::cout << in[n].xyz_.y_ << " + " << in[n].dxyz_.y_ << " * t" << n << " - y - t" << n << " * Y = 0, ";
-		if ( in[n].dxyz_.z_ < 0)
-			std::cout << in[n].xyz_.z_ << " - " << -1 * in[n].dxyz_.z_ << " * t" << n << " - z - t" << n << " * Z = 0, ";
-		else
-			std::cout << in[n].xyz_.z_ << " + " << in[n].dxyz_.z_ << " * t" << n << " - z - t" << n << " * Z = 0, ";
+		s.add(c.int_val(in[n].xyz_.x_) + c.int_val(in[n].dxyz_.x_) * t[n] - x - t[n] * dx == 0 );
+		s.add(c.int_val(in[n].xyz_.y_) + c.int_val(in[n].dxyz_.y_) * t[n] - y - t[n] * dy == 0 );
+		s.add(c.int_val(in[n].xyz_.z_) + c.int_val(in[n].dxyz_.z_) * t[n] - z - t[n] * dz == 0 );
 	}
-	std::cout << "\n";
+	s.check();
+    return s.get_model().eval(x+y+z).as_int64();
+#else
+	std::cout << "\nZ3 not found. You need to solve these equations and return x+y+z `...\n";
 	for(int n { 0}; n < 3; ++n)
 	{
 		if ( in[n].dxyz_.x_ < 0)
-			std::cout << in[n].xyz_.x_ << "-" << -1 * in[n].dxyz_.x_ << "*t" << n << "-x-t" << n << "*X=0\n";
+			std::cout << in[n].xyz_.x_ << "-" << -1 * in[n].dxyz_.x_ << "*t" << n << "-x-t" << n << "*dx=0\n";
 		else
-			std::cout << in[n].xyz_.x_ << "+" << in[n].dxyz_.x_ << "*t" << n << "-x-t" << n << "*X=0\n";
+			std::cout << in[n].xyz_.x_ << "+" << in[n].xyz_.x_ << "*t" << n << "-x-t" << n << "*dx=0\n";
 		if ( in[n].dxyz_.y_ < 0)
-			std::cout << in[n].xyz_.y_ << "-" << -1 * in[n].dxyz_.y_ << "*t" << n << "-y-t" << n << "*Y=0\n";
+			std::cout << in[n].xyz_.y_ << "-" << -1 * in[n].dxyz_.y_ << "*t" << n << "-y-t" << n << "*dy=0\n";
 		else
-			std::cout << in[n].xyz_.y_ << "+" << in[n].dxyz_.y_ << "*t" << n << "-y-t" << n << "*Y=0\n";
+			std::cout << in[n].xyz_.y_ << "+" << in[n].dxyz_.y_ << "*t" << n << "-y-t" << n << "*dy=0\n";
 		if ( in[n].dxyz_.z_ < 0)
-			std::cout << in[n].xyz_.z_ << "-" << -1 * in[n].dxyz_.z_ << "*t" << n << "-z-t" << n << "*Z=0\n";
+			std::cout << in[n].xyz_.z_ << "-" << -1 * in[n].dxyz_.z_ << "*t" << n << "-z-t" << n << "*dz=0\n";
 		else
-			std::cout << in[n].xyz_.z_ << "+" << in[n].dxyz_.z_ << "*t" << n << "-z-t" << n << "*Z=0\n";
+			std::cout << in[n].xyz_.z_ << "+" << in[n].dxyz_.z_ << "*t" << n << "-z-t" << n << "*dz=0\n";
 	}
 	std::cout << "\n";
 
 	return 0;
+#endif
 }
 
 int main()

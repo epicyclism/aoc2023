@@ -38,6 +38,11 @@ FetchContent_Declare( ctre
 FetchContent_MakeAvailable(ctre)
 # uncomment when/if necessary!
 find_package(Boost 1.83 REQUIRED)
+find_package(z3 QUIET)
+if(z3_FOUND)
+    add_compile_definitions(USE_Z3)
+    message(STATUS "Got Z3")
+endif()
 find_package(mdspan CONFIG REQUIRED)
 find_path(SYSTEM_INCLUDE_DIR experimental/mdspan)
 include_directories(${SYSTEM_INCLUDE_DIR})
