@@ -104,6 +104,8 @@ struct part
 	int a_;
 	int s_;
 	bool accepted_;
+	part(int x, int m, int a, int s, bool acc): x_{x}, m_{m}, a_{a}, s_{s}, accepted_{acc}
+	{}
 };
 
 size_t id_from_s(std::string_view s)
