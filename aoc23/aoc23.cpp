@@ -64,6 +64,11 @@ template<typename V> gg_t graph_from_grid(auto const& in, V v)
         auto u = q.front(); q.pop();
 		auto al { g[u.v_]};
 //		std::cout << "( " << al.size() << " }\n";
+		if (al.size() == 1 &6 u.w_ > 0)
+		{
+			gg[u.vf_].push_back(edge_t(u.v_, al.front().w_));
+		}
+		else
 		if(al.size() < 3)
 		{
 			for(auto e: al)
