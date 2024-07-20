@@ -1,11 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <set>
-#include <map>
 #include <stack>
 #include <algorithm>
-#include <limits>
 
 #include "graph.h"
 
@@ -36,87 +33,10 @@ auto get_input()
 	return g;
 }
 
-struct edge_t
+auto pt1(auto const& in)
 {
-	size_t v_;
-	size_t w_;
-	edge_t(size_t v, size_t w) : v_{v}, w_{w}
-	{}
-};
-
-using gg_t = std::map<size_t, std::vector<edge_t>>;
-
-template<typename V> gg_t graph_from_grid(auto const& in, V v)
-{
-	grid_direct g(in.v_, in.stride_, v);
-	gg_t gg;
-	struct pth
-	{
-		size_t v_;
-		size_t vf_;
-		size_t w_;
-	};
-	std::vector<bool> visited(g.size(), false);
-	std::queue<pth> q;
-    q.push({in.start_, in.start_, 0});
-    while (!q.empty())
-    {
-        auto u = q.front(); q.pop();
-		auto al { g[u.v_]};
-//		std::cout << "( " << al.size() << " }\n";
-		if (al.size() == 1 &6 u.w_ > 0)
-		{
-			gg[u.vf_].push_back(edge_t(u.v_, al.front().w_));
-		}
-		else
-		if(al.size() < 3)
-		{
-			for(auto e: al)
-			{
-				if (!visited[e])
-				{
-					visited[e] = true;
-					++u.w_;
-					u.v_ = e;
-					q.push(u);
-				}
-			}
-		}
-		else
-		{
-			gg[u.vf_].push_back(edge_t(u.v_, u.w_));
-			u.vf_ = u.v_;
-			u.w_ = 1;
-			for (auto e : al)
-			{
-				if (!visited[e])
-				{
-					visited[e] = true;
-					u.v_ = e;
-					q.push(u);
-				}
-			}
-		}
-    }
-
-	return gg;
-}
-
-template<typename V> auto ptN(auto const& in, V v)
-{
-	auto gg { graph_from_grid( in, v)};
-	std::cout << gg.size() << "\n";
-	for(auto& v: gg[in.start_])
-		std::cout << v.v_ << ", " << v.w_ << "\n";
-
-	return 0;
-}
-
-int main()
-{
-	auto in{ get_input() };
-	std::cout << "cells = " << in.v_.size() << ", start = " << in.start_ << ", finish = " << in.finish_ << "\n";
-	std::cout << "pt1 = " << ptN(in, [&](auto from, auto to)
+	grid_direct g(in.v_, in.stride_,
+		[&](auto from, auto to)
 		{
 			if (in.v_[to] == '#')
 				return false;
@@ -137,9 +57,104 @@ int main()
 			if (in.v_[to] == '<')
 				return from == to + 1;
 			return in.v_[from] == '.';
-		}) << "\n";
-	std::cout << "pt2 = " << ptN(in, [&](auto from, auto to)
+		});
+
+	size_t longest{ 0 };
+	struct path
+	{
+		size_t v_;
+		size_t cnt_;
+		std::vector<bool> pth_;
+	};
+	std::queue<path> q;
+	path p;
+	p.v_ = in.start_;
+	p.cnt_ = 0;
+	p.pth_.resize(g.size());
+	q.push(p);
+	while (!q.empty())
+	{
+		auto e{ q.front() };
+		q.pop();
+		if (!e.pth_[e.v_])
 		{
-			return !(in.v_[from] == '#' || in.v_[to] == '#')   ;
-		}) << "\n";
+			if (e.v_ == in.finish_)
+			{
+				if (e.cnt_ > longest)
+					longest = e.cnt_;
+			}
+			++e.cnt_;
+			e.pth_[e.v_] = true;
+			for (auto n : g[e.v_])
+			{
+				if (!e.pth_[n])
+				{
+					path p(e);
+					p.v_ = n;
+					q.push(p);
+				}
+			}
+		}
+	}
+	return longest ;
 }
+
+auto pt2(auto const& in)
+{
+	grid_direct g(in.v_, in.stride_,
+		[&](auto from, auto to)
+		{
+			if (in.v_[to] == '#')
+				return false;
+			return true;
+		});
+
+	size_t longest{ 0 };
+	struct path
+	{
+		size_t v_;
+		size_t cnt_;
+		std::vector<bool> pth_;
+	};
+	std::queue<path> q;
+	path p;
+	p.v_ = in.start_;
+	p.cnt_ = 0;
+	p.pth_.resize(g.size());
+	q.push(p);
+	while (!q.empty())
+	{
+		auto e{ q.front() };
+		q.pop();
+		if (!e.pth_[e.v_])
+		{
+			if (e.v_ == in.finish_)
+			{
+				if (e.cnt_ > longest)
+					longest = e.cnt_;
+			}
+			++e.cnt_;
+			e.pth_[e.v_] = true;
+			for (auto n : g[e.v_])
+			{
+				if (!e.pth_[n])
+				{
+					path p(e);
+					p.v_ = n;
+					q.push(p);
+				}
+			}
+		}
+	}
+	return longest;
+}
+
+int main()
+{
+	auto in{ get_input() };
+	std::cout << "pt1 = " << pt1(in) << "\n";
+	std::cout << "pt2 = " << pt2(in) << "\n";
+}
+
+// 4914 too low
+// 6186 too low
